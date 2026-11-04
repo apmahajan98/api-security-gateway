@@ -97,3 +97,33 @@ Use the gateway only with systems and data owned by the team or covered by
 explicit testing authorization. Development and evaluation data must be
 synthetic or appropriately sanitized. The gateway's detection behavior should
 be treated as an experimental security control until independently validated.
+
+## Developer quick start
+
+Clone the repository, create a virtual environment, and install the project
+with development dependencies:
+
+```bash
+git clone <repository-url>
+cd 272_project
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e '.[dev]'
+cp .env.example .env
+```
+
+Run the checks:
+
+```bash
+pytest
+ruff check .
+ruff format --check .
+```
+
+Start the API directly with `uvicorn app.main:app --reload`, or start the API
+and PostgreSQL together with `docker compose up --build`. The initial service
+exposes `/health`, `/ready`, and the interactive API reference at `/docs`.
+
+Team branching, pull requests, review requirements, and local setup details are
+defined by the project team through the repository workflow.

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0c1118" />
+    <title>Sentinel · API Security Gateway</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/styles.css?v=3" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">✦</span><span>sentinel</span><span class="brand-beta">BETA</span></div>
+        <div class="gateway-status"><span class="status-dot"></span><div><strong>Gateway online</strong><small>Dependency-free mode</small></div></div>
+        <nav aria-label="Main navigation">
+          <a class="nav-item active" href="#inspect"><span class="nav-icon">⌁</span>Inspect request</a>
+          <a class="nav-item" href="#history"><span class="nav-icon">▤</span>Request history</a>
+        </nav>
+        <div class="sidebar-note"><span class="note-icon">i</span><p>Requests are inspected in memory. Raw request data is not saved.</p></div>
+        <div class="sidebar-footer"><span>Sentinel Gateway</span><span>v0.1.0</span></div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar"><div class="breadcrumbs"><span>Gateway</span><span>/</span><strong>Inspect request</strong></div><span class="live-label"><span class="pulse"></span>Ready</span></header>
+        <div class="content-wrap">
+          <section class="page-heading" id="inspect"><div><p class="eyebrow">Rule-based inspection</p><h1>Inspect an API request</h1><p class="subheading">Submit an authorized test request to see whether the gateway allows or blocks it.</p></div></section>
+
+          <section class="workspace-grid">
+            <form class="panel inspector-panel" id="inspectForm">
+              <div class="panel-heading"><div><h2>Request details</h2><p>Only the fields below are sent to the inspection endpoint.</p></div><span class="endpoint-badge">POST /inspect</span></div>
+              <div class="form-row"><label for="method">Method</label><select id="method" name="method"><option>GET</option><option selected>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option></select></div>
+              <div class="form-row"><label for="path">Path</label><input id="path" name="path" value="/v1/users" required maxlength="2048" /></div>
+              <div class="form-row"><label for="query">Query or input</label><input id="query" name="query" placeholder="e.g. alice" maxlength="4096" /></div>
+              <div class="form-row"><label for="body">JSON body <span>optional</span></label><textarea id="body" name="body" rows="5" placeholder='{"name":"alice"}'></textarea></div>
+              <div class="form-actions"><button class="secondary-button" type="button" id="benignExample">Use benign example</button><button class="primary-button" type="submit"><span>→</span> Inspect request</button></div>
+              <p class="form-help">Use synthetic test data only. The gateway returns a decision and does not forward this request.</p>
+            </form>
+
+            <section class="panel result-panel" aria-live="polite"><div class="panel-heading"><div><h2>Decision</h2><p id="resultSubtitle">No request inspected yet.</p></div><span class="result-icon" id="resultIcon">—</span></div><div class="empty-result" id="emptyResult"><div class="empty-shield">◈</div><strong>Waiting for a request</strong><p>Submit the form to run the rule detector.</p></div><div class="result-details hidden" id="resultDetails"><div class="decision-banner" id="decisionBanner"><span id="decisionLabel">Allowed</span><span id="decisionReason"></span></div><dl><div><dt>Request ID</dt><dd id="requestId">—</dd></div><div><dt>Detector</dt><dd id="detector">—</dd></div><div><dt>Classification</dt><dd id="classification">—</dd></div><div><dt>Latency</dt><dd id="latency">—</dd></div></dl></div></section>
+          </section>
+
+          <section class="panel history-panel" id="history"><div class="panel-heading"><div><h2>Request history</h2><p>Requests inspected during this browser session.</p></div><span class="session-badge">In memory only</span></div><div class="empty-history" id="emptyHistory"><span>⌁</span><strong>No requests yet</strong><p>Inspected requests will appear here.</p></div><div class="table-wrap hidden" id="historyTableWrap"><table><thead><tr><th>REQUEST</th><th>ROUTE</th><th>DECISION</th><th>DETECTOR</th><th>LATENCY</th></tr></thead><tbody id="historyBody"></tbody></table></div></section>
+          <footer class="footer"><span>Sentinel Gateway · no authentication required</span><a href="/docs">API documentation ↗</a></footer>
+        </div>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <script src="/static/app.js?v=3"></script>
+  </body>
+</html>
