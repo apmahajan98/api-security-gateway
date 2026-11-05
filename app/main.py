@@ -5,11 +5,12 @@ from pathlib import Path
 from typing import Any, Literal
 from uuid import uuid4
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from app.demo_auth import demo_auth_store
 
 app = FastAPI(
     title="API Security and Anomaly Detection Gateway",
@@ -27,6 +28,11 @@ class InspectRequest(BaseModel):
     path: str = Field(min_length=1, max_length=2048)
     query: str = Field(default="", max_length=4096)
     body: Any = None
+
+
+class DemoLoginRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=64)
+    password: str = Field(min_length=1, max_length=128)
 
 
 INJECTION_RULES = (
@@ -63,6 +69,14 @@ def health() -> dict[str, str]:
 def ready() -> dict[str, str]:
     """Return readiness for the initial dependency-free service skeleton."""
     return {"status": "ready"}
+
+
+@app.post("/demo/login", tags=["educational demo"])
+def demo_login(payload: DemoLoginRequest) -> dict[str, bool]:
+    """Authenticate against the fake, in-memory SQLite account."""
+    if not demo_auth_store.authenticate(payload.username, payload.password):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    return {"authenticated": True}
 
 
 @app.post("/inspect", tags=["inspection"])

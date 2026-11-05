@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-
 client = TestClient(app)
 
 
@@ -47,3 +46,23 @@ def test_inspect_blocks_sql_injection_pattern() -> None:
     assert response.status_code == 200
     assert response.json()["decision"] == "block"
     assert response.json()["reason_code"] == "SQL_INJECTION"
+
+
+def test_demo_login_accepts_fake_account() -> None:
+    response = client.post(
+        "/demo/login",
+        json={"username": "alice", "password": "demo-password"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"authenticated": True}
+
+
+def test_demo_login_treats_sql_like_username_as_data() -> None:
+    response = client.post(
+        "/demo/login",
+        json={"username": "' OR 1=1 --", "password": "anything"},
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Invalid username or password"}

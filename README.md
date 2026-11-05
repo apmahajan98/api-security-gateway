@@ -91,6 +91,47 @@ include gateway-added p50, p95, and p99 latency; throughput; CPU and memory
 usage; true positives; false positives; true negatives; false negatives; and
 the detector threshold, model version, hardware, and dataset composition.
 
+## SQL parameterization demo
+
+The educational `POST /demo/login` endpoint uses an in-memory SQLite database
+with one fake account (`alice` / `demo-password`). It is separate from the
+gateway's `/inspect` detector and is for local learning only; do not use real
+credentials or deploy it as an authentication service.
+
+Try a successful login in the interactive API docs at `/docs`, or send:
+
+```json
+{"username": "alice", "password": "demo-password"}
+```
+
+Then submit this synthetic input to the login endpoint:
+
+```json
+{"username": "' OR 1=1 --", "password": "anything"}
+```
+
+`POST /inspect` flags that string as a possible SQL injection because it
+matches a rule. `POST /demo/login` instead returns `401`: the SQLite query
+uses a `?` placeholder and supplies the username as a separate parameter, so
+the whole string is looked up as a username, not interpreted as SQL. If code
+instead concatenated untrusted text into SQL, input could alter the query's
+logic; this demo intentionally does not execute such a vulnerable query. The
+stored demo password is salted and hashed, not stored as plaintext.
+
+For example, with the app running locally:
+
+```bash
+curl -i http://localhost:8000/demo/login \
+  -H 'Content-Type: application/json' \
+  --data-binary @- <<'JSON'
+{"username":"' OR 1=1 --","password":"anything"}
+JSON
+```
+
+The expected status is `401 Unauthorized`, just like any other invalid login.
+This intentionally small example demonstrates the importance of parameterized
+queries; it is not a production authentication service.
+
 ## Security scope
 
 Use the gateway only with systems and data owned by the team or covered by
