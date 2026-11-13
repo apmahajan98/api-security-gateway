@@ -23,9 +23,11 @@ Before submitting, confirm that the report includes:
   above tables.
 - Page numbers on the report.
 - A `References` section with every source cited in the paper. Include the
-  required source types, such as papers, books, technical reports, and web
-  sources. Direct quotations must include a page-specific citation, for example
-  `\cite[p.~12]{source}`.
+  required source types, such as a conference/journal paper, a book, a
+  technical report, and a web source. The template includes examples of a paper
+  and a book in `references.bib`. Direct quotations must include a
+  page-specific citation, for example `\cite[p.~12]{source}`; the LaTeX file
+  includes a quoted-text example using this format.
 - A `pages` field for each bibliography entry where page information applies.
   Use the actual page or page range; do not leave it blank because missing
   reference page numbers may lose marks.
@@ -37,6 +39,15 @@ bibliography.
 ## Setup
 
 The report does not require the Python virtual environment.
+
+### Font requirement
+
+The report requires the actual Times New Roman font. Install that font on each
+computer before compiling. The LaTeX source checks for the font and stops with
+an error if it is unavailable; it will not silently substitute another font.
+Use a properly licensed copy of the font rather than committing font files to
+the repository. The application `Dockerfile` does not need to be changed for
+normal local report builds.
 
 Install Tectonic using one of these options:
 

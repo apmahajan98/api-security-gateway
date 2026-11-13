@@ -1,7 +1,13 @@
 \documentclass[conference]{IEEEtran}
 
 \usepackage[T1]{fontenc}
-\usepackage{times}
+% Require the actual Times New Roman system font; compilation fails if it is
+% not installed rather than silently substituting another font.
+\usepackage{fontspec}
+\IfFontExistsTF{Times New Roman}{}{%
+  \PackageError{report}{Times New Roman is not installed}{%
+    Install the licensed Times New Roman font before compiling this report.}}
+\setmainfont{Times New Roman}[Ligatures=TeX]
 \usepackage{graphicx}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
@@ -52,7 +58,11 @@ a bounded and normalized representation of a request. It should also explain
 the decision sufficiently for operators to investigate it, while avoiding the
 storage of credentials and complete payloads. This concern is consistent with
 the principle of minimizing sensitive data in operational systems
-\cite{nist80053,owaspapi}.
+\cite{nist80053,owaspapi}. Prior work also emphasizes that machine-learning
+intrusion detection must account for the differences between controlled
+datasets and real operational traffic \cite{sommer2010outside}, while general
+security practice provides the broader context for confidentiality and
+integrity controls \cite{stallings2020}.
 
 The remainder of this paper is a report template with placeholder text. The
 architecture is presented in Section II, the request-processing design in
@@ -87,6 +97,12 @@ before forwarding. The normalizer converts framework-specific data into an
 internal record containing the method, route template, identity metadata,
 selected header attributes, query metadata, and a bounded body representation.
 Secrets are removed before detector or audit code receives the record.
+
+For a direct-quotation example, NIST describes minimization as processing
+personally identifiable information that is “directly relevant and necessary
+to accomplish an authorized purpose” \cite[p.~33]{nist80053}. Replace this
+example with a verified quotation and page number when the final sources are
+selected.
 
 The detector pipeline provides two complementary paths. Deterministic rules
 recognize known malformed inputs and policy violations. An adapter interface
