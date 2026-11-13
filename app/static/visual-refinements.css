@@ -1,0 +1,153 @@
+/* Refined dark visual layer. The base layout remains in styles.css. */
+body {
+  background-color: #060e19;
+  background-image:
+    radial-gradient(circle at 78% -18%, rgba(34, 91, 135, 0.23), transparent 33%),
+    radial-gradient(circle at 20% 115%, rgba(20, 63, 90, 0.15), transparent 30%),
+    linear-gradient(rgba(93, 143, 180, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(93, 143, 180, 0.025) 1px, transparent 1px);
+  background-size: auto, auto, 36px 36px, 36px 36px;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, rgba(10, 25, 40, 0.98), rgba(6, 16, 28, 0.98));
+  box-shadow: 12px 0 38px rgba(0, 0, 0, 0.13);
+}
+
+.brand {
+  letter-spacing: 0.15px;
+}
+
+.brand-mark {
+  filter: drop-shadow(0 0 8px rgba(84, 178, 255, 0.32));
+}
+
+.gateway-card {
+  background: linear-gradient(135deg, rgba(22, 54, 81, 0.78), rgba(12, 31, 49, 0.78));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.035), 0 9px 24px rgba(0, 0, 0, 0.12);
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: rgba(7, 18, 31, 0.78);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 rgba(102, 165, 211, 0.04);
+}
+
+.content-wrap {
+  padding-top: 42px;
+}
+
+.page-heading h1 {
+  font-weight: 800;
+  letter-spacing: -1.55px;
+}
+
+.panel,
+.metric-card {
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.025), 0 12px 35px rgba(0, 0, 0, 0.12);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.panel:hover {
+  border-color: #34536c;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.035), 0 15px 38px rgba(0, 0, 0, 0.18);
+}
+
+.metric-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::after {
+  position: absolute;
+  content: "";
+  width: 120px;
+  height: 120px;
+  right: -65px;
+  top: -72px;
+  border-radius: 50%;
+  background: rgba(84, 178, 255, 0.07);
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  border-color: #3b607b;
+}
+
+.metric-card strong {
+  font-weight: 800;
+}
+
+.metric-icon {
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.traffic-chart-panel,
+.incidents-panel {
+  background: linear-gradient(145deg, rgba(17, 38, 57, 0.94), rgba(10, 25, 40, 0.94));
+}
+
+.chart-wrap {
+  background: linear-gradient(180deg, rgba(3, 13, 23, 0.08), transparent);
+}
+
+.events-panel .panel-heading,
+.table-panel .panel-heading {
+  background: linear-gradient(90deg, rgba(22, 48, 70, 0.34), transparent);
+}
+
+th {
+  background: rgba(5, 15, 26, 0.2);
+}
+
+tbody tr {
+  transition: background 0.18s ease;
+}
+
+tbody tr:hover {
+  background: rgba(65, 133, 177, 0.08);
+}
+
+.outline-button,
+.link-button {
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.05), 0 5px 16px rgba(0, 0, 0, 0.12);
+}
+
+.outline-button {
+  background: linear-gradient(135deg, #143954, #0d273d);
+}
+
+.health-pill {
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.05), 0 5px 16px rgba(0, 0, 0, 0.1);
+}
+
+.playground-drawer {
+  background: linear-gradient(160deg, rgba(16, 38, 56, 0.98), rgba(7, 19, 32, 0.99));
+  box-shadow: -24px 0 65px rgba(0, 0, 0, 0.42);
+}
+
+.simulation-banner,
+.drawer-callout {
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.parameter-list {
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #69c1ff, #3e9fe5);
+  box-shadow: 0 8px 22px rgba(45, 143, 211, 0.23), inset 0 1px rgba(255, 255, 255, 0.28);
+}
+
+.primary-button:hover {
+  background: linear-gradient(135deg, #8bd0ff, #50aff0);
+  transform: translateY(-1px);
+}
+
+.drawer-backdrop {
+  backdrop-filter: blur(3px);
+}

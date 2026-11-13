@@ -1,0 +1,30 @@
+{
+  "model_version": "0.2.0",
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "device": "cpu",
+  "random_state": 42,
+  "isolation_forest": {
+    "n_estimators": 200,
+    "contamination": 0.05
+  },
+  "feature_schema": [
+    "requests_per_minute",
+    "failed_logins_per_minute",
+    "unique_routes",
+    "average_request_bytes",
+    "average_response_bytes",
+    "error_rate",
+    "hour_of_day_sin",
+    "hour_of_day_cos",
+    "session_age_minutes",
+    "new_routes",
+    "location_changed",
+    "client_profile_one_hot"
+  ],
+  "training_data": {
+    "normal_file": "data/normal_behavior.jsonl",
+    "validation_file": "data/validation_behavior.jsonl",
+    "evaluation_file": "data/evaluation_behavior.jsonl",
+    "generator": "scripts/generate_traffic.py"
+  }
+}

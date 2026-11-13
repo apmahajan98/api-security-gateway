@@ -19,7 +19,7 @@ The gateway provides the following capabilities:
 - Input normalization and bounded request representation.
 - Deterministic detection of known malicious patterns and policy violations.
 - A detector adapter interface for statistical or machine-learning models.
-- Explicit `allow`, `block`, and future `review` outcomes.
+- Explicit `allow`, `block`, and `review` outcomes.
 - Stable reason codes for blocked requests.
 - Structured audit events containing security-relevant metadata.
 - Latency and detection metrics for controlled evaluation.
@@ -47,8 +47,10 @@ Gateway ingress
 
 The gateway assigns a request identifier, evaluates the request against the
 configured detectors, and emits a decision. Allowed requests are forwarded to
-the protected API. Blocked requests terminate at the gateway and receive a
-response that exposes a safe reason code without revealing detector internals.
+the protected API in the planned proxy deployment. In the current prototype,
+`/inspect` is a controlled inspection endpoint and does not forward traffic.
+Blocked requests terminate at the gateway and receive a response that exposes
+a safe reason code without revealing detector internals.
 
 ## Detection model
 
@@ -62,26 +64,46 @@ statistical or machine-learning detector. An adapter can return a detector
 name, score, threshold, model version, and classification without changing
 the gateway transport or audit interfaces.
 
+The current playground uses this adapter through the same `/inspect` endpoint.
+It sends a bounded, synthetic behavior summary rather than exposing raw
+payload controls. The gateway runs deterministic rules first, then the local
+ML detector when the trained artifact and cached Hugging Face model are
+available. An ML anomaly produces a `review` decision so the model can surface
+unusual behavior without replacing hard security rules. `/system/status`
+exposes whether the local model is loaded.
+
 ## Audit and data protection
 
 Audit events contain request ID, timestamp, HTTP method, route template,
 decision, response status, detector result, reason code, bounded latency, and a
 non-reversible correlation identifier where required.
 
-The gateway does not persist authorization headers, cookies, passwords, API
-keys, tokens, complete request bodies, or unnecessary personal data. Request
-content is inspected only within configured size limits and is not copied into
-logs or audit records. Database credentials are supplied through runtime
-configuration rather than application data.
+The current prototype keeps dashboard events in browser memory. The planned
+database writer will not persist authorization headers, cookies, passwords,
+API keys, tokens, complete request bodies, or unnecessary personal data.
+Request content is inspected only within configured size limits and is not
+copied into logs or audit records. Database credentials are supplied through
+runtime configuration rather than application data.
 
 ## Technology
 
 - Python and FastAPI provide the HTTP service and API contracts.
-- PostgreSQL stores structured audit events.
-- SQLAlchemy provides database access and persistence models.
+- PostgreSQL and SQLAlchemy are the planned structured audit persistence layer.
 - Docker Compose supplies the local gateway and database environment.
 - Helm packages the service for Kubernetes-based deployment.
 - AWS is the target deployment environment for authorized testing.
+
+## Current implementation status
+
+The current milestone includes the FastAPI inspection endpoint, static security
+rules, the reusable CPU-based ML anomaly detector, the synthetic request
+playground, and the dashboard health/status views. The dashboard's initial KPI
+cards, chart, incidents, API inventory, and event rows are representative
+showcase data; a simulation adds real results to the current browser session.
+
+PostgreSQL persistence, protected-API forwarding, authentication, and Helm/AWS
+deployment are architecture and integration milestones that remain to be wired
+into the prototype.
 
 ## Evaluation
 
@@ -116,14 +138,36 @@ cp .env.example .env
 Run the checks:
 
 ```bash
-pytest
+python -m pytest -q
 ruff check .
 ruff format --check .
 ```
 
-Start the API directly with `uvicorn app.main:app --reload`, or start the API
-and PostgreSQL together with `docker compose up --build`. The initial service
-exposes `/health`, `/ready`, and the interactive API reference at `/docs`.
+Start the API directly with `python -m uvicorn app.main:app --reload`, or start
+the API and PostgreSQL together with `docker compose up --build`. The initial
+service exposes `/health`, `/ready`, `/system/status`, and the interactive API
+reference at `/docs`.
 
-Team branching, pull requests, review requirements, and local setup details are
-defined by the project team through the repository workflow.
+Team branching, pull requests, review requirements, ownership boundaries, and
+local setup details are defined in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## ML experiment quick start
+
+Generate synthetic traffic, train the local CPU-based anomaly detector, and
+evaluate it:
+
+```bash
+python -m scripts.generate_traffic
+python -m scripts.train_anomaly_model
+python -m scripts.tune_anomaly_model
+python -m scripts.evaluate_anomaly_model
+```
+
+The training set contains normal behavior only. A separate validation set is
+used to tune the decision threshold, and the final evaluation set measures
+the result on unseen controlled traffic such as high request volume, repeated
+login failures, unusual data exports, and route spraying.
+
+Training configuration and reproducibility instructions are in
+[`docs/ML_TRAINING.md`](docs/ML_TRAINING.md). Generated model artifacts are
+not committed; they can be rebuilt from the tracked scripts and configuration.

@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-
 client = TestClient(app)
 
 
@@ -47,3 +46,32 @@ def test_inspect_blocks_sql_injection_pattern() -> None:
     assert response.status_code == 200
     assert response.json()["decision"] == "block"
     assert response.json()["reason_code"] == "SQL_INJECTION"
+
+
+def test_simulation_returns_combined_detection_contract() -> None:
+    response = client.post(
+        "/inspect",
+        json={
+            "method": "GET",
+            "path": "/customers/export",
+            "simulation": {
+                "requests_per_minute": 120,
+                "failed_logins_per_minute": 2,
+                "unique_routes": 12,
+                "average_request_bytes": 8000,
+                "average_response_bytes": 250000,
+                "error_rate": 0.24,
+                "client_profile": "consumer",
+                "hour_of_day": 3,
+                "session_age_minutes": 12,
+                "new_routes": 8,
+                "location_changed": 1,
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["rule_decision"] == "allow"
+    assert payload["decision"] in {"allow", "review"}
+    assert "ml" in payload

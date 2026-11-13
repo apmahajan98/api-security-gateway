@@ -13,6 +13,9 @@ dependencies = [
     "pydantic-settings>=2.5,<3",
     "sqlalchemy>=2.0,<3",
     "psycopg[binary]>=3.2,<4",
+    "sentence-transformers>=3,<6",
+    "scikit-learn>=1.5,<2",
+    "joblib>=1.4,<2",
 ]
 
 [project.optional-dependencies]
