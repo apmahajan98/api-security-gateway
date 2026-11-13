@@ -1,0 +1,236 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage[T1]{fontenc}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\pagestyle{plain}
+
+\title{An API Security and Anomaly Detection Gateway for\\
+Controlled Request Evaluation}
+
+\author{\IEEEauthorblockN{Student One, Student Two, and Student Three}
+\IEEEauthorblockA{Department of Computer Science\\
+University Name\\
+City, State, USA\\
+\{student.one, student.two, student.three\}@university.edu}}
+
+\begin{document}
+\maketitle
+\thispagestyle{plain}
+
+\begin{abstract}
+This paper presents a placeholder description of an API security and anomaly
+detection gateway. The gateway evaluates requests before they reach a protected
+application, combines deterministic rules with an extensible anomaly-detector
+interface, and records sanitized audit events. The report is intentionally
+formatted as an IEEE-style student submission and contains placeholder prose
+that can be replaced with project-specific results. The proposed architecture
+separates transport, normalization, detection, decision policy, and persistence
+so that each concern can be tested independently. Evaluation is described using
+latency percentiles, throughput, and confusion-matrix measures.
+\end{abstract}
+
+\begin{IEEEkeywords} % see rules for alphabetical order, quantity of words, etc.
+API security, anomaly detection, request validation, audit logging, gateway,
+security evaluation
+\end{IEEEkeywords}
+
+\section{Introduction}
+Application programming interfaces are a primary boundary between clients and
+modern services. A request that is syntactically valid may still violate an
+endpoint policy, contain suspicious input, or exhibit behavior inconsistent
+with normal traffic. This project investigates a defensive gateway that creates
+an explicit decision before forwarding traffic to a protected API.
+
+The motivating idea is simple: a gateway should make security decisions using
+a bounded and normalized representation of a request. It should also explain
+the decision sufficiently for operators to investigate it, while avoiding the
+storage of credentials and complete payloads. This concern is consistent with
+the principle of minimizing sensitive data in operational systems
+\cite{nist80053,owaspapi}.
+
+The remainder of this paper is a report template with placeholder text. The
+architecture is presented in Section II, the request-processing design in
+Section III, the evaluation approach in Section IV, and limitations and future
+work in Sections V and VI.
+
+\section{System Architecture}
+The gateway is organized as a modular monolith. A single deployable service
+contains interfaces between ingress, normalization, detector implementations,
+decision policy, and audit persistence. This arrangement reduces deployment
+complexity while preserving boundaries that can later support separate
+components. Figure~\ref{fig:pipeline} summarizes the intended data flow.
+
+\begin{figure}[!t]
+\centering
+\fbox{\begin{minipage}{0.94\columnwidth}
+\centering
+\small
+Client $\rightarrow$ Ingress $\rightarrow$ Validation $\rightarrow$
+Normalization $\rightarrow$ Detectors $\rightarrow$ Policy\\[2pt]
+\hfill $\searrow$ allow $\rightarrow$ Protected API\\
+\hfill $\searrow$ block $\rightarrow$ Safe error\\
+\hfill $\searrow$ audit event $\rightarrow$ PostgreSQL
+\end{minipage}}
+\caption{Conceptual request-processing pipeline.}
+\label{fig:pipeline}
+\end{figure}
+
+The ingress layer assigns a request identifier, applies transport limits, and
+returns consistent status codes. Authentication and schema validation occur
+before forwarding. The normalizer converts framework-specific data into an
+internal record containing the method, route template, identity metadata,
+selected header attributes, query metadata, and a bounded body representation.
+Secrets are removed before detector or audit code receives the record.
+
+The detector pipeline provides two complementary paths. Deterministic rules
+recognize known malformed inputs and policy violations. An adapter interface
+allows a statistical or machine-learning detector to return a score,
+threshold, model version, and classification without coupling the transport
+layer to a particular framework. The policy layer combines these results into
+an explicit \textit{allow}, \textit{block}, or future \textit{review} decision.
+
+\section{Request Processing and Data Protection}
+The processing sequence is designed to make the security boundary observable.
+First, the gateway receives a request and assigns a monotonic start time. Next,
+it authenticates the caller and validates endpoint-specific fields. Requests
+that fail validation are rejected before reaching a protected service. The
+normalizer then creates a bounded record for the detection pipeline. This
+record is intentionally smaller than the original request.
+
+An audit event stores the request identifier, timestamp, method, route
+template, decision, downstream status, detector classification, reason code,
+bounded latency, and an optional irreversible correlation identifier. It does
+not store authorization headers, cookies, passwords, API keys, access tokens,
+complete request bodies, or raw uploaded files. These choices reduce the
+consequences of an audit-store compromise and support privacy-aware operations
+\cite{nistprivacy}.
+
+For a request $r$, let $D(r)$ be the detector result and $P(D(r))$ the policy
+decision. A simple threshold model can be represented as
+\begin{equation}
+  P(D(r)) =
+  \begin{cases}
+    \text{block}, & s(r) \geq \tau,\\
+    \text{allow}, & s(r) < \tau,
+  \end{cases}
+  \label{eq:threshold}
+\end{equation}
+where $s(r)$ is a detector score and $\tau$ is a configured threshold. A
+production implementation may add rule precedence, endpoint-specific policy,
+or an analyst review path. The equation is included as a compact description
+of the decision concept rather than as a claim about final project results.
+
+\begin{table}[!t]
+\caption{Illustrative Gateway Measurements}
+\label{tab:metrics}
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+Metric & Purpose & Example target \\
+\midrule
+P50 latency & Typical overhead & $<10$ ms \\
+P95 latency & Tail overhead & $<50$ ms \\
+Throughput & Capacity & $>500$ req/s \\
+False-positive rate & User impact & $<2\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Evaluation Methodology}
+Evaluation should use versioned synthetic data and authorized test traffic.
+The benign portion should represent ordinary endpoint usage, while the test
+portion should contain controlled examples of malformed requests and policy
+violations. Each run should record the detector configuration, threshold,
+model version, hardware, dataset composition, and known limitations. This
+documentation makes comparisons more meaningful and avoids presenting a single
+number without context.
+
+The primary performance measures are gateway-added latency at the 50th, 95th,
+and 99th percentiles, throughput, CPU utilization, memory utilization, and
+audit-write outcomes. Detection quality is summarized with true positives,
+false positives, true negatives, and false negatives. Precision and recall are
+defined as
+\begin{equation}
+  \text{precision}=\frac{TP}{TP+FP}, \qquad
+  \text{recall}=\frac{TP}{TP+FN}.
+  \label{eq:quality}
+\end{equation}
+
+The following placeholder text should be replaced by the group's measured
+results. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer
+vehicula, justo at feugiat posuere, neque turpis volutpat erat, at elementum
+libero nibh sed nunc. Curabitur non sem vel arcu tincidunt consequat. Donec
+tempor, massa vitae dignissim commodo, justo urna malesuada lectus, at posuere
+magna lectus non nibh. These sentences are deliberately generic and should not
+be interpreted as empirical evidence.
+
+\section{Implementation Considerations}
+The prototype uses a Python web service and a relational database for
+structured audit records. Containerized local development makes it possible to
+run the gateway and database with repeatable configuration. Runtime settings
+such as credentials, thresholds, and model parameters should be supplied
+through the deployment environment rather than embedded in source code.
+
+\subsection{Deployment Configuration}
+Configuration should be provided at runtime and reviewed separately from the
+application source. This subsection demonstrates the expected IEEE heading
+hierarchy.
+
+\subsubsection{Local Development}
+Local development uses repeatable container configuration and synthetic data.
+This subsubsection demonstrates a third-level heading. Replace this placeholder
+text with the team's actual setup and experimental procedure.
+
+Failure behavior is part of the security design. Malformed requests fail
+validation and are not forwarded. Deterministic rule matches produce a block
+decision. Detector timeouts and dependency failures follow an explicit policy
+and are observable as operational events. An audit-store interruption must not
+silently change a blocked request into an allowed request or cause credentials
+to be written to fallback logs.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent consequat
+diam non est gravida, at tincidunt mi faucibus. Suspendisse potenti. Aenean
+porta, nibh vitae consequat laoreet, justo massa lacinia eros, in efficitur
+libero neque sit amet dolor. Sed vulputate sem at augue commodo, in fermentum
+libero cursus. The placeholder paragraph illustrates the expected density of
+body text and can be replaced with implementation details, screenshots, or
+experiment observations.
+
+\section{Limitations and Future Work}
+The gateway is an experimental security control and does not replace secure
+application authorization, network controls, or independently validated
+production defenses. A detector can miss novel behavior, and an aggressive
+threshold can reject legitimate requests. Evaluation data may also fail to
+represent traffic encountered after deployment. These limitations should be
+reported alongside any performance or accuracy claim.
+
+Future work includes endpoint-aware baselines, drift monitoring, stronger
+configuration validation, a controlled analyst-review workflow, and a more
+systematic comparison of rule and statistical detectors. The project can also
+measure the operational cost of audit persistence and test recovery behavior
+under dependency failures. Lorem ipsum dolor sit amet, consectetur adipiscing
+elit. Aliquam erat volutpat. Morbi in lorem sit amet elit accumsan consequat.
+
+\section{Conclusion}
+This paper described an IEEE-style placeholder report for an API security and
+anomaly detection gateway. The central design separates request handling,
+normalization, detection, policy, and audit persistence. That separation makes
+the system easier to test and allows future detector implementations without
+changing the transport contract. The final submission should replace the
+placeholder prose with the team's authorship, implementation evidence,
+measurements, and discussion of limitations.
+
+\section*{Acknowledgment}
+The authors may use this section to acknowledge instructors, teammates, or
+resources that supported the project.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
