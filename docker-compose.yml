@@ -1,13 +1,36 @@
 services:
+  model-init:
+    platform: linux/amd64
+    build: .
+    command: ["sh", "/app/scripts/docker_model_init.sh"]
+    environment:
+      HF_HOME: /root/.cache/huggingface
+    volumes:
+      - model_data:/app/models
+      - hf_cache:/root/.cache/huggingface
+
   gateway:
+    platform: linux/amd64
     build: .
     ports:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+psycopg://api_security:change-me-locally@db:5432/api_security
+      HF_HOME: /root/.cache/huggingface
+      ML_ENABLED: "true"
     depends_on:
+      model-init:
+        condition: service_completed_successfully
       db:
         condition: service_healthy
+    volumes:
+      - model_data:/app/models:ro
+      - hf_cache:/root/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   db:
     image: postgres:16-alpine
@@ -26,4 +49,6 @@ services:
       retries: 5
 
 volumes:
+  model_data:
+  hf_cache:
   postgres_data:
