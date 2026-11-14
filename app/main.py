@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.detectors.ml_anomaly import MLAnomalyDetector
+from app.database import active_incidents, db_available, init_db, overview_metrics, persist_inspection, recent_events
 from app.ml.features import TrafficWindow
 
 app = FastAPI(
@@ -23,6 +24,14 @@ app = FastAPI(
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR.parent / "models" / "anomaly_detector.joblib"
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+
+
+@app.on_event("startup")
+def startup_database() -> None:
+    # Docker starts Postgres before the gateway. Local tests may intentionally
+    # run without Postgres, so database availability is checked per request too.
+    if db_available():
+        init_db()
 
 
 class SimulationTraffic(BaseModel):
@@ -119,7 +128,7 @@ def health() -> dict[str, str]:
 
 @app.get("/ready", tags=["system"])
 def ready() -> dict[str, str]:
-    """Return readiness for the initial dependency-free service skeleton."""
+    """Return process liveness; database health is exposed in system status."""
     return {"status": "ready"}
 
 
@@ -159,7 +168,7 @@ def inspect_request(payload: InspectRequest) -> dict[str, Any]:
         reason_code = None
 
     latency_ms = round((time.perf_counter() - started) * 1000, 2)
-    return {
+    result = {
         "request_id": f"req_{uuid4().hex[:10]}",
         "method": payload.method,
         "path": payload.path,
@@ -176,3 +185,32 @@ def inspect_request(payload: InspectRequest) -> dict[str, Any]:
         "ml": ml_result.as_dict() if ml_result else None,
         "latency_ms": latency_ms,
     }
+    if db_available():
+        try:
+            persist_inspection(result, payload.model_dump())
+        except Exception:
+            # Inspection must remain available if the database has a transient
+            # failure; the event can be retried through the audit pipeline.
+            pass
+    return result
+
+
+@app.get("/api/events", tags=["dashboard"])
+def api_events(limit: int = 50) -> dict[str, Any]:
+    if not db_available():
+        return {"events": [], "database": "unavailable"}
+    return {"events": recent_events(max(1, min(limit, 200))), "database": "connected"}
+
+
+@app.get("/api/incidents", tags=["dashboard"])
+def api_incidents(limit: int = 20) -> dict[str, Any]:
+    if not db_available():
+        return {"incidents": [], "database": "unavailable"}
+    return {"incidents": active_incidents(max(1, min(limit, 100))), "database": "connected"}
+
+
+@app.get("/api/overview", tags=["dashboard"])
+def api_overview() -> dict[str, Any]:
+    if not db_available():
+        return {"metrics": {"requests_today": 0, "blocked_today": 0, "anomalies_today": 0, "p95_latency_ms": 0}, "database": "unavailable"}
+    return {"metrics": overview_metrics(), "database": "connected"}
