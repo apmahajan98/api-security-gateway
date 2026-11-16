@@ -101,9 +101,24 @@ playground, and the dashboard health/status views. The dashboard's initial KPI
 cards, chart, incidents, API inventory, and event rows are representative
 showcase data; a simulation adds real results to the current browser session.
 
-PostgreSQL persistence, protected-API forwarding, authentication, and Helm/AWS
-deployment are architecture and integration milestones that remain to be wired
-into the prototype.
+PostgreSQL persistence is wired into the inspection path. Protected-API
+forwarding, authentication, and Helm/AWS deployment remain future milestones.
+
+### PostgreSQL event persistence
+
+The gateway stores sanitized inspection metadata in PostgreSQL. Raw request
+bodies and query strings are never written to the database. The schema is in
+`db/init/001_schema.sql` and is also created by the application on startup.
+
+Start the database and gateway with:
+
+```bash
+docker compose up --build
+```
+
+The dashboard reads persisted data through `GET /api/events`,
+`GET /api/incidents`, and `GET /api/overview`. Set `DATABASE_URL` when running
+outside Compose; the local default is the value in `.env.example`.
 
 ## Evaluation
 

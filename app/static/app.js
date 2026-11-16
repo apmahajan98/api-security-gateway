@@ -117,6 +117,11 @@ function formatNumber(value) {
   return Number(value).toLocaleString('en-US');
 }
 
+function formatEventTime(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleTimeString('en-US', { hour12: false });
+}
+
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add('show');
@@ -270,6 +275,29 @@ async function loadSystemStatus() {
   }
 }
 
+async function loadDatabaseData() {
+  try {
+    const [eventsResponse, overviewResponse] = await Promise.all([fetch('/api/events?limit=50'), fetch('/api/overview')]);
+    if (!eventsResponse.ok || !overviewResponse.ok) throw new Error('database unavailable');
+    const eventsPayload = await eventsResponse.json();
+    const overviewPayload = await overviewResponse.json();
+    if (eventsPayload.database === 'connected' && eventsPayload.events.length) {
+      eventLog = eventsPayload.events.map((event) => ({ ...event, time: formatEventTime(event.time) }));
+      renderEvents();
+    }
+    if (overviewPayload.database === 'connected') {
+      const metrics = overviewPayload.metrics;
+      document.querySelector('#requestsMetric').textContent = formatNumber(metrics.requests_today);
+      document.querySelector('#blockedMetric').textContent = formatNumber(metrics.blocked_today);
+      document.querySelector('#anomaliesMetric').textContent = formatNumber(metrics.anomalies_today);
+      document.querySelector('#latencyMetric').innerHTML = `${metrics.p95_latency_ms} <b>ms</b>`;
+    }
+  } catch {
+    // The seeded demo rows remain visible when the database is not running.
+  }
+}
+
 renderScenarioDetails();
 renderEvents();
 loadSystemStatus();
+loadDatabaseData();
