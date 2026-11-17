@@ -264,3 +264,118 @@ tbody tr:hover {
 .blocked-result .simulation-metrics b {
   color: #ffc1c4;
 }
+
+/* Simplified visual system: flat surfaces, restrained color, and compact geometry. */
+body {
+  background: #0b1118;
+  background-image: none;
+}
+
+.sidebar,
+.topbar,
+.traffic-chart-panel,
+.incidents-panel,
+.playground-drawer,
+.panel,
+.metric-card {
+  background: #111a24;
+  box-shadow: none;
+}
+
+.sidebar {
+  border-right-color: #26323d;
+}
+
+.topbar {
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.panel,
+.metric-card,
+.gateway-card,
+.outline-button,
+.link-button,
+.health-pill,
+.api-card,
+.health-card,
+.incident-card,
+.simulation-banner,
+.parameter-list,
+.simulation-result {
+  border-radius: 4px;
+}
+
+.panel,
+.metric-card {
+  transition: border-color 0.2s ease;
+}
+
+.panel:hover,
+.metric-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.metric-card::after,
+.brand-mark {
+  filter: none;
+}
+
+.metric-card::after {
+  display: none;
+}
+
+.traffic-chart-panel,
+.incidents-panel,
+.chart-wrap,
+.events-panel .panel-heading,
+.table-panel .panel-heading,
+.outline-button,
+.primary-button {
+  background: #111a24;
+  background-image: none;
+}
+
+.gateway-card,
+.health-pill,
+.simulation-banner {
+  box-shadow: none;
+}
+
+.route-chip,
+.severity,
+.demo-badge,
+.session-badge,
+.read-only-badge,
+.alert-count {
+  border-radius: 3px;
+}
+
+.primary-button,
+.primary-button:hover {
+  background: #4b9bd1;
+  box-shadow: none;
+  transform: none;
+}
+
+.ui-icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: middle;
+}
+
+.nav-icon {
+  display: grid;
+  place-items: center;
+}
+
+.nav-icon .ui-icon {
+  width: 17px;
+  height: 17px;
+}
