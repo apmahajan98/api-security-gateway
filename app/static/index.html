@@ -4,18 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#07121f" />
-    <title>API Security Dashboard</title>
+    <title>API Security Gateway</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/styles.css?v=5" />
-    <link rel="stylesheet" href="/static/visual-refinements.css?v=8" />
+    <link rel="stylesheet" href="/static/styles.css?v=6" />
   </head>
   <body>
     <div class="app-shell">
       <aside class="sidebar">
-        <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 28 32" role="img"><path d="M14 2 25 6v8c0 7.7-4.6 12.6-11 16C7.6 26.6 3 21.7 3 14V6l11-4Z" /><path d="m8.8 15.5 3.3 3.2 7.3-7.5" /></svg></span><span>API SECURITY DASHBOARD</span></div>
-        <div class="gateway-card"><span class="status-dot" id="gatewayHealthIndicator"></span><div><strong id="gatewayHealthStatus">Checking gateway</strong></div></div>
+        <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 28 32" role="img"><path d="M14 2 25 6v8c0 7.7-4.6 12.6-11 16C7.6 26.6 3 21.7 3 14V6l11-4Z" /><path d="m8.8 15.5 3.3 3.2 7.3-7.5" /></svg></span><span>API SECURITY GATEWAY</span></div>
         <nav class="main-nav" aria-label="Security center navigation">
           <button class="nav-item active" data-view="overview" type="button"><span class="nav-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m4 11 8-7 8 7v9H4z"/><path d="M9 20v-5h6v5"/></svg></span><span>Overview</span></button>
           <button class="nav-item" data-view="incidents" type="button"><span class="nav-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="m12 4 8 15H4z"/><path d="M12 9v4M12 16h.01"/></svg></span><span>Incidents</span><span class="nav-count alert-count">3</span></button>
@@ -29,7 +27,7 @@
       </aside>
 
       <main class="main-content">
-        <header class="topbar"><div class="breadcrumbs"><strong id="viewLabel">Overview</strong></div></header>
+        <header class="topbar"><div class="breadcrumbs"><strong id="viewLabel">Overview</strong></div><div class="topbar-actions"><span class="health-pill"><span class="status-dot" id="gatewayHealthIndicator"></span><span id="gatewayHealthStatus">Checking gateway</span></span></div></header>
         <div class="content-wrap">
           <section class="view active" id="view-overview" data-view-panel="overview">
             <div class="page-heading"><div><h1>Security overview</h1><p class="subheading">Monitor and investigate enterprise API traffic before it reaches protected services.</p></div><div class="heading-actions"><button class="outline-button" data-open-playground type="button"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Run simulation</button></div></div>
