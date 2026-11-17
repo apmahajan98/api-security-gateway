@@ -353,6 +353,9 @@ async function loadDatabaseData() {
       document.querySelector('#blockedMetric').textContent = formatNumber(metrics.blocked_today);
       document.querySelector('#anomaliesMetric').textContent = formatNumber(metrics.anomalies_today);
       document.querySelector('#latencyMetric').innerHTML = `${metrics.p95_latency_ms} <b>ms</b>`;
+      document.querySelectorAll('.metric-card small').forEach((element) => {
+        element.style.display = Number(metrics.requests_today) > 0 ? 'none' : '';
+      });
     }
     if (trafficPayload.database === 'connected') {
       renderTrafficSeries(trafficPayload.traffic);
