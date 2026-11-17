@@ -296,6 +296,8 @@ async function loadSystemStatus() {
     const loaded = status.ml?.status === 'loaded';
     document.querySelector('#gatewayHealthStatus').textContent = gatewayHealthy ? 'Gateway healthy' : 'Gateway unavailable';
     document.querySelector('#gatewayHealthIndicator').classList.toggle('amber-indicator', !gatewayHealthy);
+    document.querySelector('#gatewayPillStatus').textContent = gatewayHealthy ? 'Gateway healthy' : 'Gateway unavailable';
+    document.querySelector('#gatewayPillIndicator').classList.toggle('amber-indicator', !gatewayHealthy);
     document.querySelector('#gatewayCardStatus').textContent = gatewayHealthy ? 'Operational' : 'Unavailable';
     document.querySelector('#gatewayCardIndicator').classList.toggle('amber-indicator', !gatewayHealthy);
     document.querySelector('#ruleHealthStatus').textContent = ruleEngineLoaded ? 'Loaded' : 'Unavailable';
@@ -310,6 +312,8 @@ async function loadSystemStatus() {
   } catch {
     document.querySelector('#gatewayHealthStatus').textContent = 'Gateway unavailable';
     document.querySelector('#gatewayHealthIndicator').classList.add('amber-indicator');
+    document.querySelector('#gatewayPillStatus').textContent = 'Gateway unavailable';
+    document.querySelector('#gatewayPillIndicator').classList.add('amber-indicator');
     document.querySelector('#gatewayCardStatus').textContent = 'Unavailable';
     document.querySelector('#gatewayCardIndicator').classList.add('amber-indicator');
     document.querySelector('#ruleHealthStatus').textContent = 'Unavailable';
