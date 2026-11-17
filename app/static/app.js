@@ -300,8 +300,6 @@ async function loadSystemStatus() {
     document.querySelector('#gatewayCardIndicator').classList.toggle('amber-indicator', !gatewayHealthy);
     document.querySelector('#ruleHealthStatus').textContent = ruleEngineLoaded ? 'Loaded' : 'Unavailable';
     document.querySelector('#ruleHealthIndicator').classList.toggle('amber-indicator', !ruleEngineLoaded);
-    document.querySelector('#gatewayPillStatus').textContent = gatewayHealthy ? 'Gateway healthy' : 'Gateway unavailable';
-    document.querySelector('#gatewayPillIndicator').classList.toggle('amber-indicator', !gatewayHealthy);
     document.querySelector('#mlHealthStatus').textContent = loaded ? `Loaded · v${status.ml.model_version}` : 'Unavailable · rules only';
     document.querySelector('#mlHealthMeta').textContent = loaded ? status.ml.embedding_model : 'Train the local artifact to enable ML review';
     document.querySelector('#mlHealthIndicator').classList.toggle('amber-indicator', !loaded);
@@ -316,8 +314,6 @@ async function loadSystemStatus() {
     document.querySelector('#gatewayCardIndicator').classList.add('amber-indicator');
     document.querySelector('#ruleHealthStatus').textContent = 'Unavailable';
     document.querySelector('#ruleHealthIndicator').classList.add('amber-indicator');
-    document.querySelector('#gatewayPillStatus').textContent = 'Gateway unavailable';
-    document.querySelector('#gatewayPillIndicator').classList.add('amber-indicator');
     document.querySelector('#mlHealthStatus').textContent = 'Unavailable · rules only';
     document.querySelector('#mlHealthIndicator').classList.add('amber-indicator');
     document.querySelector('#databaseHealthStatus').textContent = 'Unavailable';

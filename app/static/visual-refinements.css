@@ -94,6 +94,10 @@ body {
   background: linear-gradient(180deg, rgba(3, 13, 23, 0.08), transparent);
 }
 
+.legend-blue {
+  background: var(--green);
+}
+
 .chart-axis {
   stroke: #385269;
   stroke-width: 1;
