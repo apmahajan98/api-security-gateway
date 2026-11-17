@@ -209,7 +209,14 @@ def api_inventory() -> list[dict[str, Any]]:
     inventory = []
     for item in grouped.values():
         total = item["requests"]
-        status = "Review" if item["blocked"] or item["review"] else "Healthy"
+        if item["blocked"] and item["review"]:
+            status = "Critical"
+        elif item["blocked"]:
+            status = "Blocked"
+        elif item["review"]:
+            status = "Review"
+        else:
+            status = "Healthy"
         inventory.append(
             {
                 "name": item["name"],
@@ -217,6 +224,8 @@ def api_inventory() -> list[dict[str, Any]]:
                 "route_count": len(item["routes"]),
                 "status": status,
                 "requests": total,
+                "blocked": item["blocked"],
+                "review": item["review"],
                 "allowed_percent": round(item["allowed"] / total * 100, 1) if total else 0,
                 "p95_latency_ms": round(_weighted_percentile(item["latencies"], 0.95), 2),
             }

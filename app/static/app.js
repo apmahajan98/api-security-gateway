@@ -222,7 +222,7 @@ function renderApiInventory(apis) {
     renderEmptyState(grid, 'No API activity recorded yet.');
     return;
   }
-  grid.innerHTML = apis.map((api) => `<article class="panel api-card"><div class="api-title"><span class="api-status ${api.status === 'Review' ? 'warning' : ''}"></span><div><h2>${escapeHtml(api.name)}</h2></div><span class="${api.status === 'Review' ? 'warning-text' : 'healthy-text'}">${escapeHtml(api.status)}</span></div><div class="api-meta"><span><b>${formatNumber(api.route_count)}</b> routes</span><span><b>${api.allowed_percent}%</b> allowed</span><span><b>${api.p95_latency_ms} ms</b> p95</span></div>${api.routes.map((route) => `<span class="route-chip">${escapeHtml(route)}</span>`).join('')}</article>`).join('');
+  grid.innerHTML = apis.map((api) => `<article class="panel api-card"><div class="api-title"><span class="api-status ${api.status === 'Critical' || api.status === 'Blocked' ? 'blocked' : api.status === 'Review' ? 'warning' : ''}"></span><div><h2>${escapeHtml(api.name)}</h2></div><span class="${api.status === 'Critical' || api.status === 'Blocked' ? 'blocked-text' : api.status === 'Review' ? 'warning-text' : 'healthy-text'}">${escapeHtml(api.status)}</span></div><div class="api-summary"><b>${formatNumber(api.requests)}</b> total requests · <b>${formatNumber(api.blocked)}</b> blocked · <b>${formatNumber(api.review)}</b> review</div><div class="api-meta"><span><b>${formatNumber(api.route_count)}</b> routes</span><span><b>${api.allowed_percent}%</b> allowed</span><span><b>${api.p95_latency_ms} ms</b> p95</span></div>${api.routes.map((route) => `<span class="route-chip">${escapeHtml(route)}</span>`).join('')}</article>`).join('');
 }
 
 function renderAnalytics(analytics) {

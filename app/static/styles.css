@@ -403,3 +403,4 @@ body {
   color: #ffd77d;
   background: #4d3a1b;
 }
+ .api-summary{color:#8fa5b4;font:10px var(--mono);margin-top:10px}.api-summary b{color:#d7e4ea}.api-status.blocked{background:var(--red);box-shadow:0 0 0 4px #ff73791c}.blocked-text{color:var(--red);font:10px var(--mono)}
