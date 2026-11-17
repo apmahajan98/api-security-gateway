@@ -280,8 +280,10 @@ async function runSimulation(event) {
     document.querySelector('#simulationDecision').textContent = result.decision.toUpperCase();
     document.querySelector('#simulationDetector').textContent = result.detector || (result.ml ? 'rule + ml-anomaly' : 'rule-detector');
     document.querySelector('#simulationLatency').textContent = `${result.latency_ms} ms`;
-    document.querySelector('#simulationResult').classList.remove('hidden');
-    document.querySelector('#simulationResult').classList.toggle('anomaly-result', result.decision !== 'allow');
+    const simulationResult = document.querySelector('#simulationResult');
+    simulationResult.classList.remove('hidden', 'anomaly-result', 'blocked-result');
+    simulationResult.classList.toggle('anomaly-result', result.decision === 'review');
+    simulationResult.classList.toggle('blocked-result', result.decision === 'block');
     showToast('Synthetic request evaluated successfully');
   } catch (error) {
     showToast(error.message || 'Simulation failed');

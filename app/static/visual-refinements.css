@@ -242,3 +242,21 @@ tbody tr:hover {
   border: 1px dashed #29455d;
   border-radius: 8px;
 }
+
+.simulation-result.blocked-result {
+  border-color: #7b3039;
+  background: #352027;
+}
+
+.blocked-result .result-dot {
+  background: var(--red);
+  box-shadow: 0 0 0 4px #ff737920;
+}
+
+.blocked-result .simulation-metrics {
+  border-color: #633039;
+}
+
+.blocked-result .simulation-metrics b {
+  color: #ffc1c4;
+}

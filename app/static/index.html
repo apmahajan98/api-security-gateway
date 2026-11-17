@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/static/styles.css?v=5" />
-    <link rel="stylesheet" href="/static/visual-refinements.css?v=5" />
+    <link rel="stylesheet" href="/static/visual-refinements.css?v=6" />
   </head>
   <body>
     <div class="app-shell">
@@ -50,6 +50,6 @@
     <div class="drawer-backdrop" id="drawerBackdrop"></div>
     <aside class="playground-drawer" id="playgroundDrawer" aria-hidden="true" aria-labelledby="playgroundTitle"><div class="drawer-heading"><div><p class="eyebrow">Controlled simulation</p><h2 id="playgroundTitle">Traffic Simulator</h2><p>Generate synthetic traffic through the same gateway pipeline used for evaluation.</p></div><button class="close-button" id="closePlayground" type="button" aria-label="Close traffic simulator">×</button></div><div class="simulation-banner"><span class="flask-icon">⚗</span><div><strong>Synthetic traffic only</strong><p>Creates test requests. It does not use user data or impact production workloads.</p></div></div><form id="playgroundForm"><label class="field-label" for="scenario">Use case</label><select id="scenario" name="scenario"><option value="high-volume">High-volume API access</option><option value="credential-abuse">Credential abuse</option><option value="data-export">Suspicious data export</option><option value="normal-activity">Normal user activity</option></select><p class="scenario-description" id="scenarioDescription"></p><div class="parameters-heading"><span>Parameters used by this simulation</span><span class="read-only-badge">READ-ONLY</span></div><div class="parameter-list" id="scenarioParameters"></div><div class="drawer-actions"><button class="secondary-button" id="cancelPlayground" type="button">Cancel</button><button class="primary-button" id="runSimulation" type="submit"><span>▷</span> Run simulation</button></div></form><div class="simulation-result hidden" id="simulationResult" aria-live="polite"><div class="result-heading"><span class="result-dot"></span><div><strong id="simulationOutcome">Simulation complete</strong><small id="simulationSummary"></small></div></div><div class="simulation-metrics"><span><b id="simulationDecision">—</b><small>gateway decision</small></span><span><b id="simulationDetector">—</b><small>detector</small></span><span><b id="simulationLatency">—</b><small>latency</small></span></div></div></aside>
     <div class="toast" id="toast" role="status"></div>
-    <script src="/static/app.js?v=12"></script>
+    <script src="/static/app.js?v=13"></script>
   </body>
 </html>
