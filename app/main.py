@@ -9,12 +9,12 @@ from typing import Any, Literal
 from uuid import uuid4
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.detectors.ml_anomaly import MLAnomalyDetector
-from app.database import active_incidents, analytics_metrics, api_inventory, db_available, init_db, overview_metrics, persist_inspection, recent_events, risk_for, traffic_series
+from app.database import active_incidents, analytics_metrics, api_inventory, audit_events_csv, db_available, init_db, overview_metrics, persist_inspection, recent_events, risk_for, traffic_series
 from app.ml.features import TrafficWindow
 
 app = FastAPI(
@@ -233,6 +233,17 @@ def api_events(limit: int = 50) -> dict[str, Any]:
     if not db_available():
         return {"events": [], "database": "unavailable"}
     return {"events": recent_events(max(1, min(limit, 200))), "database": "connected"}
+
+
+@app.get("/api/events/export", tags=["dashboard"])
+def api_events_export(limit: int = 200) -> Response:
+    if not db_available():
+        return Response(content="database unavailable\n", status_code=503, media_type="text/plain")
+    return Response(
+        content=audit_events_csv(max(1, min(limit, 2000))),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="audit-log.csv"'},
+    )
 
 
 @app.get("/api/apis", tags=["dashboard"])

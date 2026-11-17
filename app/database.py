@@ -1,3 +1,5 @@
+import csv
+import io
 import os
 from datetime import datetime, timedelta, timezone
 from statistics import median
@@ -174,6 +176,47 @@ def recent_events(limit: int = 50) -> list[dict[str, Any]]:
     with SessionLocal() as session:
         rows = session.scalars(select(SecurityEvent).order_by(SecurityEvent.occurred_at.desc()).limit(limit)).all()
         return [serialize_event(row) for row in rows]
+
+
+def audit_events_csv(limit: int = 200) -> str:
+    """Export persisted audit metadata without raw request contents."""
+    fields = (
+        "time",
+        "request_id",
+        "method",
+        "route",
+        "decision",
+        "detector",
+        "risk",
+        "reason",
+        "latency_ms",
+    )
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=fields, lineterminator="\n")
+    writer.writeheader()
+
+    with SessionLocal() as session:
+        rows = session.scalars(
+            select(SecurityEvent).order_by(SecurityEvent.occurred_at.desc()).limit(limit)
+        ).all()
+        for event in rows:
+            writer.writerow(
+                {
+                    "time": event.occurred_at.isoformat(),
+                    "request_id": event.request_id,
+                    "method": event.method,
+                    "route": event.path,
+                    "decision": {"block": "Blocked", "review": "Anomaly review", "allow": "Allowed"}.get(
+                        event.decision, event.decision
+                    ),
+                    "detector": event.detector,
+                    "risk": event.risk,
+                    "reason": event.reason_code or "",
+                    "latency_ms": f"{event.latency_ms:g}",
+                }
+            )
+
+    return output.getvalue()
 
 
 def api_inventory() -> list[dict[str, Any]]:

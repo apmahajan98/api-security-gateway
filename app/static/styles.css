@@ -1730,3 +1730,8 @@ th {
 .api-meta {
   color: #526173;
 }
+
+.outline-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}

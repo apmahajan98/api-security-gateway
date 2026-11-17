@@ -129,6 +129,32 @@ function showToast(message) {
   window.toastTimer = window.setTimeout(() => toast.classList.remove('show'), 3200);
 }
 
+const exportAuditButton = document.querySelector('#exportAuditButton');
+exportAuditButton?.addEventListener('click', async () => {
+  const originalLabel = exportAuditButton.innerHTML;
+  exportAuditButton.disabled = true;
+  exportAuditButton.textContent = 'Preparing export…';
+  try {
+    const response = await fetch('/api/events/export?limit=2000');
+    if (!response.ok) throw new Error('export unavailable');
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'audit-log.csv';
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showToast('Sanitized audit log exported');
+  } catch {
+    showToast('Audit log export unavailable');
+  } finally {
+    exportAuditButton.innerHTML = originalLabel;
+    exportAuditButton.disabled = false;
+  }
+});
+
 function decisionClass(decision) {
   if (decision === 'Blocked') return 'blocked';
   if (decision === 'Anomaly review') return 'review';
