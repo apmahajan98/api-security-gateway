@@ -154,7 +154,7 @@ def inspect_request(payload: InspectRequest) -> dict[str, Any]:
     ml_result = None
     # Anomaly detection needs a time-window summary. The playground supplies
     # one explicitly; ordinary single requests are evaluated by rules only.
-    if payload.simulation is not None:
+    if rule_decision != "block" and payload.simulation is not None:
         detector = _load_ml_detector()
         if detector is not None:
             ml_result = detector.analyze(_traffic_window(payload))
