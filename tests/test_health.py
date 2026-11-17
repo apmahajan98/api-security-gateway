@@ -23,7 +23,7 @@ def test_dashboard_is_served() -> None:
     response = client.get("/")
 
     assert response.status_code == 200
-    assert "Sentinel" in response.text
+    assert "API SECURITY GATEWAY" in response.text
 
 
 def test_inspect_allows_benign_request() -> None:
