@@ -300,13 +300,40 @@ async function loadSystemStatus() {
     const response = await fetch('/system/status');
     if (!response.ok) throw new Error('status unavailable');
     const status = await response.json();
+    const gatewayHealthy = status.gateway === 'healthy';
+    const ruleEngineLoaded = status.rule_engine === 'loaded';
     const loaded = status.ml?.status === 'loaded';
+    document.querySelector('#gatewayHealthStatus').textContent = gatewayHealthy ? 'Gateway healthy' : 'Gateway unavailable';
+    document.querySelector('#gatewayHealthMeta').textContent = gatewayHealthy ? 'Service responding' : 'Service status unavailable';
+    document.querySelector('#gatewayHealthIndicator').classList.toggle('amber-indicator', !gatewayHealthy);
+    document.querySelector('#gatewayCardStatus').textContent = gatewayHealthy ? 'Operational' : 'Unavailable';
+    document.querySelector('#gatewayCardIndicator').classList.toggle('amber-indicator', !gatewayHealthy);
+    document.querySelector('#ruleHealthStatus').textContent = ruleEngineLoaded ? 'Loaded' : 'Unavailable';
+    document.querySelector('#ruleHealthIndicator').classList.toggle('amber-indicator', !ruleEngineLoaded);
+    document.querySelector('#gatewayPillStatus').textContent = gatewayHealthy ? 'Gateway healthy' : 'Gateway unavailable';
+    document.querySelector('#gatewayPillIndicator').classList.toggle('amber-indicator', !gatewayHealthy);
     document.querySelector('#mlHealthStatus').textContent = loaded ? `Loaded · v${status.ml.model_version}` : 'Unavailable · rules only';
     document.querySelector('#mlHealthMeta').textContent = loaded ? status.ml.embedding_model : 'Train the local artifact to enable ML review';
     document.querySelector('#mlHealthIndicator').classList.toggle('amber-indicator', !loaded);
+    const databaseConnected = status.database?.status === 'connected';
+    document.querySelector('#databaseHealthStatus').textContent = databaseConnected ? 'Connected' : 'Unavailable';
+    document.querySelector('#databaseHealthMeta').textContent = databaseConnected ? 'Audit persistence active' : 'Events will not be persisted';
+    document.querySelector('#databaseHealthIndicator').classList.toggle('amber-indicator', !databaseConnected);
   } catch {
+    document.querySelector('#gatewayHealthStatus').textContent = 'Gateway unavailable';
+    document.querySelector('#gatewayHealthMeta').textContent = 'Service status unavailable';
+    document.querySelector('#gatewayHealthIndicator').classList.add('amber-indicator');
+    document.querySelector('#gatewayCardStatus').textContent = 'Unavailable';
+    document.querySelector('#gatewayCardIndicator').classList.add('amber-indicator');
+    document.querySelector('#ruleHealthStatus').textContent = 'Unavailable';
+    document.querySelector('#ruleHealthIndicator').classList.add('amber-indicator');
+    document.querySelector('#gatewayPillStatus').textContent = 'Gateway unavailable';
+    document.querySelector('#gatewayPillIndicator').classList.add('amber-indicator');
     document.querySelector('#mlHealthStatus').textContent = 'Unavailable · rules only';
     document.querySelector('#mlHealthIndicator').classList.add('amber-indicator');
+    document.querySelector('#databaseHealthStatus').textContent = 'Unavailable';
+    document.querySelector('#databaseHealthMeta').textContent = 'Status unavailable';
+    document.querySelector('#databaseHealthIndicator').classList.add('amber-indicator');
   }
 }
 

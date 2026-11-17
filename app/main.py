@@ -139,6 +139,7 @@ def system_status() -> dict[str, Any]:
     return {
         "gateway": "healthy",
         "rule_engine": "loaded",
+        "database": {"status": "connected" if db_available() else "unavailable"},
         "ml": detector.health() if detector else {"status": "unavailable"},
         "model_artifact": str(MODEL_PATH.name) if MODEL_PATH.exists() else None,
     }
