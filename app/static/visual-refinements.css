@@ -104,6 +104,11 @@ body {
   font: 10px var(--mono);
 }
 
+.chart-grid-line {
+  stroke: #213a50;
+  stroke-width: 1;
+}
+
 .events-panel .panel-heading,
 .table-panel .panel-heading {
   background: linear-gradient(90deg, rgba(22, 48, 70, 0.34), transparent);
