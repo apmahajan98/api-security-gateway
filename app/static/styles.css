@@ -380,3 +380,26 @@ body {
   width: 17px;
   height: 17px;
 }
+
+/* Incident colors follow decision semantics: blocked is red, review is amber. */
+.incident-symbol.critical,
+.incident-symbol.high {
+  background: #4a252b;
+  color: var(--red);
+}
+
+.incident-symbol.medium {
+  background: #4d3a1b;
+  color: var(--amber);
+}
+
+.critical-tag,
+.high-tag {
+  color: #ffb0b4;
+  background: #4a252b;
+}
+
+.medium-tag {
+  color: #ffd77d;
+  background: #4d3a1b;
+}
