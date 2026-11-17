@@ -1,4 +1,5 @@
 import json
+import hashlib
 import os
 import re
 import time
@@ -8,7 +9,7 @@ from typing import Any, Literal
 from uuid import uuid4
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -23,7 +24,30 @@ app = FastAPI(
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR.parent / "models" / "anomaly_detector.joblib"
-app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+
+
+class HashedStaticFiles(StaticFiles):
+    """Serve content-hashed asset URLs from the source static directory."""
+
+    async def get_response(self, path: str, scope: dict[str, Any]):
+        match = re.fullmatch(r"(styles|app)\.([0-9a-f]{12})\.(css|js)", path)
+        if match:
+            stem, digest, suffix = match.groups()
+            source = BASE_DIR / "static" / f"{stem}.{suffix}"
+            current_digest = hashlib.sha256(source.read_bytes()).hexdigest()[:12]
+            if digest != current_digest:
+                return await super().get_response(path, scope)
+            path = f"{stem}.{suffix}"
+        return await super().get_response(path, scope)
+
+
+app.mount("/static", HashedStaticFiles(directory=BASE_DIR / "static"), name="static")
+
+
+def hashed_asset_url(filename: str) -> str:
+    source = BASE_DIR / "static" / filename
+    digest = hashlib.sha256(source.read_bytes()).hexdigest()[:12]
+    return f"/static/{source.stem}.{digest}{source.suffix}"
 
 
 @app.on_event("startup")
@@ -115,10 +139,13 @@ def _load_ml_detector() -> MLAnomalyDetector | None:
         return None
 
 
-@app.get("/", include_in_schema=False)
-def dashboard() -> FileResponse:
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def dashboard() -> HTMLResponse:
     """Serve the gateway operations dashboard."""
-    return FileResponse(BASE_DIR / "static" / "index.html")
+    html = (BASE_DIR / "static" / "index.html").read_text(encoding="utf-8")
+    html = re.sub(r"/static/styles\.css(?:\?v=\d+)?", hashed_asset_url("styles.css"), html)
+    html = re.sub(r"/static/app\.js(?:\?v=\d+)?", hashed_asset_url("app.js"), html)
+    return HTMLResponse(html, headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/health", tags=["system"])
