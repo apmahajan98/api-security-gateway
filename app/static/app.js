@@ -159,6 +159,14 @@ function renderMarkup(target, markup) {
   target.innerHTML = markup;
 }
 
+function incidentSymbol(incident) {
+  const blocked = incident.detector === 'rule-detector';
+  const icon = blocked
+    ? '<path d="M12 3 20 6v6c0 4-2.8 6.8-8 9-5.2-2.2-8-5-8-9V6z"/>'
+    : '<path d="M12 4 20 19H4z"/><path d="M12 9v4M12 16h.01"/>';
+  return `<span class="incident-symbol ${blocked ? 'blocked' : 'review'}"><svg class="ui-icon" viewBox="0 0 24 24">${icon}</svg></span>`;
+}
+
 function clearInitialDemoState() {
   document.querySelector('#requestsMetric').textContent = '0';
   document.querySelector('#blockedMetric').textContent = '0';
@@ -414,8 +422,8 @@ async function loadDatabaseData() {
       document.querySelector('.incidents-panel .panel-heading p').textContent = `${incidents.length} open incident${incidents.length === 1 ? '' : 's'}`;
       document.querySelector('.page-tag').textContent = `${incidents.length} OPEN`;
       document.querySelector('.alert-count').textContent = incidents.length;
-      renderMarkup(document.querySelector('.incidents-panel .incident-list'), incidents.length ? incidents.map((incident) => `<div class="incident-row"><span class="incident-symbol ${incident.severity.toLowerCase()}"></span><div><strong>${escapeHtml(incident.title)}</strong><small>${escapeHtml(incident.endpoint)} · ${incident.event_count} event${incident.event_count === 1 ? '' : 's'}</small></div><b class="severity ${incident.severity.toLowerCase()}-tag">${escapeHtml(incident.severity)}</b></div>`).join('') : '<div class="empty-state">No open incidents.</div>');
-      renderMarkup(document.querySelector('.incident-cards'), incidents.length ? incidents.map((incident) => `<article class="panel incident-card"><div class="incident-card-heading"><span class="incident-symbol ${incident.severity.toLowerCase()}"></span><div><span class="eyebrow">${escapeHtml(incident.severity)} · ${escapeHtml(incident.status)}</span><h2>${escapeHtml(incident.title)}</h2><p>${escapeHtml(incident.endpoint)} · ${incident.event_count} event${incident.event_count === 1 ? '' : 's'}</p></div></div></article>`).join('') : '<div class="empty-state">No incidents recorded yet.</div>');
+      renderMarkup(document.querySelector('.incidents-panel .incident-list'), incidents.length ? incidents.map((incident) => `<div class="incident-row">${incidentSymbol(incident)}<div><strong>${escapeHtml(incident.title)}</strong><small>${escapeHtml(incident.endpoint)} · ${incident.event_count} event${incident.event_count === 1 ? '' : 's'}</small></div><b class="severity ${incident.severity.toLowerCase()}-tag">${escapeHtml(incident.severity)}</b></div>`).join('') : '<div class="empty-state">No open incidents.</div>');
+      renderMarkup(document.querySelector('.incident-cards'), incidents.length ? incidents.map((incident) => `<article class="panel incident-card"><div class="incident-card-heading">${incidentSymbol(incident)}<div><span class="eyebrow">${escapeHtml(incident.severity)} · ${escapeHtml(incident.status)}</span><h2>${escapeHtml(incident.title)}</h2><p>${escapeHtml(incident.endpoint)} · ${incident.event_count} event${incident.event_count === 1 ? '' : 's'}</p></div></div></article>`).join('') : '<div class="empty-state">No incidents recorded yet.</div>');
     }
     return databaseConnected;
   } catch {
