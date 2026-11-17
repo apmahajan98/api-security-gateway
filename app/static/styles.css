@@ -417,4 +417,1316 @@ body {
   color: #ffd77d;
   background: #4d3a1b;
 }
- .api-summary{color:#8fa5b4;font:10px var(--mono);margin-top:10px}.api-summary b{color:#d7e4ea}.api-status.blocked{background:var(--red);box-shadow:0 0 0 4px #ff73791c}.blocked-text{color:var(--red);font:10px var(--mono)}
+.api-summary{color:#8fa5b4;font:10px var(--mono);margin-top:10px}.api-summary b{color:#d7e4ea}.api-status.blocked{background:var(--red);box-shadow:0 0 0 4px #ff73791c}.blocked-text{color:var(--red);font:10px var(--mono)}
+
+/* Quiet operations theme: flatter surfaces, warmer neutrals, and less
+   dashboard-template polish while preserving the existing layout and logic. */
+:root {
+  --bg: #0d1112;
+  --sidebar: #111718;
+  --panel: #161c1d;
+  --panel-soft: #1b2223;
+  --border: #303a3b;
+  --border-soft: #252e2f;
+  --text: #f0eee8;
+  --muted: #a8ada8;
+  --subtle: #747e7a;
+  --blue: #9ab8c0;
+  --green: #8fc5a5;
+  --red: #d7867a;
+  --amber: #d6aa6d;
+  --cyan: #91bebc;
+  --sans: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  letter-spacing: .005em;
+}
+
+.sidebar {
+  background: var(--sidebar);
+  border-right-color: #283232;
+}
+
+.brand {
+  color: #f4f1e9;
+  letter-spacing: .15px;
+}
+
+.gateway-card {
+  background: #171e1e;
+  border-color: #34403f;
+  border-radius: 7px;
+}
+
+.nav-item {
+  color: #aab2ad;
+  border-radius: 6px;
+}
+
+.nav-item:hover {
+  background: #192323;
+  color: #f0eee8;
+}
+
+.nav-item.active {
+  background: #1c2928;
+  box-shadow: inset 3px 0 #c99b65;
+  color: #f5f1e8;
+}
+
+.nav-item.active .nav-icon {
+  color: #d7b17d;
+}
+
+.topbar {
+  border-bottom-color: #283232;
+}
+
+.breadcrumbs strong,
+.page-heading h1,
+.panel h2 {
+  color: #f0eee8;
+}
+
+.subheading,
+.panel-heading p,
+.metric-card span,
+.incident-row small,
+.api-title p,
+.detector-heading p,
+.benchmark-card > p,
+.health-card p {
+  color: #9ba39e;
+}
+
+.health-pill {
+  background: #15251d;
+  border-color: #355a48;
+  color: #b9ddc4;
+  border-radius: 7px;
+}
+
+.metric-card,
+.panel {
+  background: #161c1d;
+  border-color: var(--border);
+  border-radius: 10px;
+  box-shadow: 0 1px 0 #ffffff08;
+}
+
+.metric-card {
+  padding: 16px;
+}
+
+.metric-card small {
+  color: #91c3a3;
+}
+
+.metric-icon {
+  background: transparent !important;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+}
+
+.metric-icon.blue {
+  color: var(--blue);
+  border-color: #526d73;
+}
+
+.metric-icon.red {
+  color: var(--red);
+  border-color: #704740;
+}
+
+.metric-icon.amber {
+  color: var(--amber);
+  border-color: #715938;
+}
+
+.metric-icon.cyan {
+  color: var(--cyan);
+  border-color: #4b6e6d;
+}
+
+.traffic-chart-panel,
+.incidents-panel,
+.chart-wrap,
+.events-panel .panel-heading,
+.table-panel .panel-heading,
+.outline-button,
+.primary-button {
+  background: #161c1d;
+  background-image: none;
+}
+
+.traffic-chart-panel,
+.incidents-panel,
+.events-panel,
+.table-panel {
+  overflow: hidden;
+}
+
+.grid-lines line,
+.chart-axis {
+  stroke: #2a3535;
+}
+
+.chart-labels text,
+.chart-axis-label {
+  fill: #78837e;
+}
+
+.allowed-line {
+  stroke: #9ab8c0;
+}
+
+.anomaly-line {
+  stroke: #d6aa6d;
+}
+
+.blocked-line {
+  stroke: #d7867a;
+}
+
+.incident-list,
+.table-wrap,
+.incident-detail,
+.api-meta,
+.benchmark-row,
+th,
+td {
+  border-color: #293333;
+}
+
+.incident-row:hover {
+  background: #192121;
+}
+
+.incident-symbol {
+  border: 1px solid currentColor;
+}
+
+.incident-symbol.critical,
+.incident-symbol.high {
+  background: #352321;
+  color: var(--red);
+}
+
+.incident-symbol.medium {
+  background: #38301f;
+  color: var(--amber);
+}
+
+.critical-tag,
+.high-tag {
+  color: #f0aaa0;
+  background: #352321;
+}
+
+.medium-tag {
+  color: #e2c28d;
+  background: #38301f;
+}
+
+.severity,
+.route-chip,
+.demo-badge,
+.session-badge,
+.read-only-badge,
+.alert-count {
+  border-radius: 4px;
+}
+
+.severity {
+  border: 1px solid currentColor;
+}
+
+.outline-button,
+.link-button {
+  border-color: #526465;
+  background: transparent;
+  color: #c7d5d3;
+  border-radius: 6px;
+}
+
+.outline-button:hover,
+.link-button:hover {
+  background: #1d2929;
+  border-color: #9ab8c0;
+}
+
+.primary-button,
+.primary-button:hover {
+  background: #c99b65;
+  color: #1c1711;
+  box-shadow: none;
+  transform: none;
+}
+
+.primary-button:hover {
+  background: #d9ae76;
+}
+
+.secondary-button {
+  border-color: #536262;
+  color: #c2cbc6;
+}
+
+.playground-drawer {
+  background: #151c1d;
+  border-left-color: #3b4948;
+}
+
+.playground-drawer select,
+.parameter-list,
+.drawer-callout,
+.simulation-banner {
+  background: #192121;
+  border-color: #3a4948;
+}
+
+.simulation-banner {
+  box-shadow: none;
+}
+
+.route-chip,
+.demo-badge,
+.session-badge,
+.read-only-badge {
+  background: #1b2727;
+  border-color: #455957;
+  color: #b9cdca;
+}
+
+.drawer-callout {
+  color: #b5c1bd;
+}
+
+.toast {
+  background: #1c3328;
+  border-color: #4d8061;
+  color: #c3e1ca;
+}
+
+/* Light paper theme. Structure, symbols, spacing, and interactions remain
+   unchanged; only visual contrast and scale are adjusted. */
+:root {
+  --bg: #f4f3ef;
+  --sidebar: #ebeae5;
+  --panel: #fcfbf8;
+  --panel-soft: #f5f4ef;
+  --border: #d2d1ca;
+  --border-soft: #e2e1db;
+  --text: #202625;
+  --muted: #5f6b67;
+  --subtle: #7c8580;
+  --blue: #356777;
+  --green: #2f7654;
+  --red: #b54f4b;
+  --amber: #95651e;
+  --cyan: #327579;
+  --sans: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-size: 15px;
+  letter-spacing: 0;
+}
+
+.sidebar {
+  background: var(--sidebar);
+  border-right-color: #d0cfc8;
+}
+
+.brand {
+  color: #1c2422;
+  font-size: 17px;
+}
+
+.gateway-card {
+  background: #f5f4ef;
+  border-color: #cfcec6;
+  color: #26302d;
+}
+
+.gateway-card small,
+.sidebar-note,
+.sidebar-footer {
+  color: #6f7974;
+}
+
+.nav-item {
+  color: #53615c;
+  font-size: 14px;
+}
+
+.nav-item:hover {
+  background: #e2e4df;
+  color: #202825;
+}
+
+.nav-item.active {
+  background: #dfe9e7;
+  box-shadow: inset 3px 0 #356777;
+  color: #1e2826;
+}
+
+.nav-item.active .nav-icon,
+.nav-icon {
+  color: #47737a;
+}
+
+.topbar {
+  background: #f4f3ef;
+  border-bottom-color: #d4d3cc;
+}
+
+.breadcrumbs {
+  color: #7a8580;
+  font-size: 14px;
+}
+
+.breadcrumbs strong,
+.page-heading h1,
+.panel h2,
+.drawer-heading h2 {
+  color: #202625;
+}
+
+.page-heading h1 {
+  font-size: 34px;
+}
+
+.subheading,
+.panel-heading p,
+.metric-card span,
+.incident-row small,
+.api-title p,
+.detector-heading p,
+.benchmark-card > p,
+.health-card p,
+.scenario-description,
+.drawer-heading p:not(.eyebrow) {
+  color: #66736e;
+  font-size: 14px;
+}
+
+.eyebrow {
+  color: #55736f;
+  font-size: 11px;
+}
+
+.health-pill {
+  background: #e2f0e8;
+  border-color: #a6c7b2;
+  color: #286144;
+  font-size: 13px;
+}
+
+.metric-card,
+.panel {
+  background: var(--panel);
+  border-color: var(--border);
+  box-shadow: 0 1px 2px #26312b0b;
+}
+
+.metric-card {
+  padding: 18px;
+}
+
+.metric-card span {
+  color: #5d6a65;
+}
+
+.metric-card strong {
+  color: #202625;
+  font-size: 27px;
+}
+
+.metric-card small {
+  color: #347857;
+  font-size: 12px;
+}
+
+.metric-card strong b {
+  color: #55635e;
+}
+
+.metric-icon {
+  background: #f3f5f1 !important;
+  border-color: currentColor;
+}
+
+.metric-icon.blue {
+  color: var(--blue);
+  border-color: #9bb6bc;
+}
+
+.metric-icon.red {
+  color: var(--red);
+  border-color: #d7a7a1;
+}
+
+.metric-icon.amber {
+  color: var(--amber);
+  border-color: #d6bc8c;
+}
+
+.metric-icon.cyan {
+  color: var(--cyan);
+  border-color: #9fc6c2;
+}
+
+.traffic-chart-panel,
+.incidents-panel,
+.chart-wrap,
+.events-panel .panel-heading,
+.table-panel .panel-heading,
+.outline-button,
+.primary-button {
+  background: var(--panel);
+  background-image: none;
+}
+
+.legend {
+  color: #5e6d68;
+  font-size: 12px;
+}
+
+.grid-lines line,
+.chart-axis {
+  stroke: #d9d9d2;
+}
+
+.chart-labels text,
+.chart-axis-label {
+  fill: #7c8580;
+  font-size: 11px;
+}
+
+.allowed-line {
+  stroke: #477f91;
+}
+
+.anomaly-line {
+  stroke: #b27b2b;
+}
+
+.blocked-line {
+  stroke: #bd5a55;
+}
+
+.incident-list,
+.table-wrap,
+.incident-detail,
+.api-meta,
+.benchmark-row,
+th,
+td {
+  border-color: #deddd6;
+}
+
+.incident-row:hover {
+  background: #f3f3ee;
+}
+
+.incident-symbol.critical,
+.incident-symbol.high {
+  background: #f5e4e0;
+  color: var(--red);
+  border-color: #dba9a2;
+}
+
+.incident-symbol.medium {
+  background: #f5eddd;
+  color: var(--amber);
+  border-color: #d8bd8c;
+}
+
+.critical-tag,
+.high-tag {
+  color: #963e3a;
+  background: #f5e4e0;
+  border-color: #dba9a2;
+}
+
+.medium-tag {
+  color: #805313;
+  background: #f5eddd;
+  border-color: #d8bd8c;
+}
+
+.severity {
+  font-size: 11px;
+}
+
+th {
+  color: #68746f;
+  font-size: 11px;
+}
+
+td {
+  color: #4e5b56;
+  font-size: 13px;
+}
+
+code,
+.route-chip,
+.demo-badge,
+.session-badge,
+.read-only-badge,
+.alert-count {
+  color: #3d6268;
+}
+
+.route-chip,
+.demo-badge,
+.session-badge,
+.read-only-badge {
+  background: #edf3f1;
+  border-color: #b9cfca;
+}
+
+.alert-count {
+  background: #f0e5cf;
+  color: #795318;
+}
+
+.outline-button,
+.link-button {
+  border-color: #8fa8a7;
+  background: transparent;
+  color: #315f6b;
+  font-size: 13px;
+}
+
+.outline-button:hover,
+.link-button:hover {
+  background: #e8f0ee;
+  border-color: #477f91;
+}
+
+.primary-button,
+.primary-button:hover {
+  background: #356777;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.primary-button:hover {
+  background: #285767;
+}
+
+.secondary-button {
+  border-color: #a9b6b1;
+  color: #43524d;
+  font-size: 13px;
+}
+
+.playground-drawer {
+  background: #f7f6f2;
+  border-left-color: #c8cbc4;
+  box-shadow: -18px 0 40px #29332a1c;
+}
+
+.playground-drawer select,
+.parameter-list,
+.drawer-callout,
+.simulation-banner {
+  background: #ffffff;
+  border-color: #cbd5d0;
+  color: #33423d;
+}
+
+.field-label,
+.parameters-heading,
+.parameter-row b,
+.drawer-heading h2,
+.simulation-banner strong {
+  color: #26322f;
+}
+
+.parameter-row,
+.parameter-row span {
+  color: #697771;
+  border-color: #e0e1da;
+}
+
+.drawer-callout {
+  color: #5f6d68;
+}
+
+.result-heading strong,
+.simulation-metrics b {
+  color: #2c4a43;
+}
+
+.toast {
+  background: #e4f1e8;
+  border-color: #9fc5aa;
+  color: #2f6846;
+}
+
+/* Higher-contrast icon surfaces for the light theme. */
+.metric-icon {
+  box-shadow: none;
+}
+
+.metric-icon.blue {
+  background: #edf5f7 !important;
+  color: #245b6b;
+  border-color: #8fb7c0;
+}
+
+.metric-icon.red {
+  background: #fff0ee !important;
+  color: #a9403c;
+  border-color: #dfa19b;
+}
+
+.metric-icon.amber {
+  background: #fff7e8 !important;
+  color: #895b13;
+  border-color: #d9b56f;
+}
+
+.metric-icon.cyan {
+  background: #edf7f6 !important;
+  color: #286d70;
+  border-color: #8ebfbc;
+}
+
+.incident-symbol {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 1px 2px #29342c12;
+}
+
+.incident-symbol.critical,
+.incident-symbol.high {
+  background: #fff0ee;
+  color: #a9403c;
+  border-color: #df9e97;
+}
+
+.incident-symbol.medium {
+  background: #fff7e8;
+  color: #895b13;
+  border-color: #d9b56f;
+}
+
+.detector-icon {
+  border: 1px solid currentColor;
+  background: #f6f8f5;
+}
+
+.detector-icon.rule {
+  background: #edf5f7;
+  color: #245b6b;
+  border-color: #8fb7c0;
+}
+
+.detector-icon.ml {
+  background: #fff7e8;
+  color: #895b13;
+  border-color: #d9b56f;
+}
+
+.flask-icon {
+  background: #edf5f7;
+  color: #245b6b;
+  border: 1px solid #8fb7c0;
+}
+
+.nav-icon .ui-icon {
+  color: #3f6f77;
+}
+
+.incident-card .incident-symbol {
+  flex: none;
+}
+
+/* Final light-theme contrast pass: pale icon tiles, readable strokes, and
+   dark enough status labels on white surfaces. */
+.metric-icon.blue,
+.detector-icon.rule,
+.flask-icon {
+  background: #f3f9fa !important;
+  color: #2c7180 !important;
+  border-color: #a6c6ca !important;
+}
+
+.metric-icon.red,
+.incident-symbol.critical,
+.incident-symbol.high {
+  background: #fff5f3 !important;
+  color: #b14b45 !important;
+  border-color: #e2b1aa !important;
+}
+
+.metric-icon.amber,
+.detector-icon.ml,
+.incident-symbol.medium {
+  background: #fffaf0 !important;
+  color: #a16d1c !important;
+  border-color: #e1c58d !important;
+}
+
+.metric-icon.cyan {
+  background: #f1faf9 !important;
+  color: #347c7c !important;
+  border-color: #add0cc !important;
+}
+
+.detector-icon.rule,
+.detector-icon.ml {
+  box-shadow: none;
+}
+
+.healthy-text,
+.health-card > b {
+  color: #27704e !important;
+}
+
+.warning-text {
+  color: #885b12 !important;
+}
+
+.benchmark-row b,
+.analytics-foot b {
+  color: #43554e !important;
+}
+
+.analytics-stat span,
+.analytics-foot span,
+.benchmark-row span {
+  color: #64736c !important;
+}
+
+.status-dot,
+.pulse,
+.health-indicator,
+.api-status {
+  background: #2f7b56;
+  box-shadow: 0 0 0 4px #e0f1e7;
+}
+
+.amber-indicator,
+.api-status.warning {
+  background: #a16d1c;
+  box-shadow: 0 0 0 4px #fff1d7;
+}
+
+/* Make the overview states readable at a glance: neutral, blocked, anomaly,
+   and latency each get a distinct pale tile with a stronger stroke. */
+.metric-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card:has(.metric-icon.blue) {
+  box-shadow: inset 4px 0 #5d93a0, 0 1px 2px #29342c12;
+}
+
+.metric-card:has(.metric-icon.red) {
+  box-shadow: inset 4px 0 #c45a52, 0 1px 2px #29342c12;
+}
+
+.metric-card:has(.metric-icon.amber) {
+  box-shadow: inset 4px 0 #c28a2e, 0 1px 2px #29342c12;
+}
+
+.metric-card:has(.metric-icon.cyan) {
+  box-shadow: inset 4px 0 #5d9f9a, 0 1px 2px #29342c12;
+}
+
+.metric-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.metric-icon .ui-icon,
+.detector-icon .ui-icon {
+  stroke-width: 2.25;
+}
+
+.metric-card:has(.metric-icon.red) .metric-card,
+.metric-card:has(.metric-icon.red) strong {
+  color: #9f3d38;
+}
+
+.metric-card:has(.metric-icon.amber) strong {
+  color: #80530e;
+}
+
+/* Fresh white enterprise-console palette. */
+:root {
+  --bg: #f7f9fb;
+  --sidebar: #eef2f6;
+  --panel: #ffffff;
+  --panel-soft: #f8fafc;
+  --border: #d7e0e8;
+  --border-soft: #e6ebf0;
+  --text: #101828;
+  --muted: #475467;
+  --subtle: #667085;
+  --blue: #2563eb;
+  --green: #15803d;
+  --red: #b42318;
+  --amber: #a16207;
+  --cyan: #0f766e;
+}
+
+html,
+body {
+  background: #f7f9fb;
+}
+
+body {
+  color: #101828;
+}
+
+.sidebar {
+  background: #eef2f6;
+  border-right-color: #d6dee7;
+}
+
+.brand {
+  color: #101828;
+}
+
+.gateway-card {
+  background: #ffffff;
+  border-color: #d2dce6;
+  box-shadow: 0 1px 3px #1018280a;
+}
+
+.nav-item {
+  color: #475467;
+}
+
+.nav-item:hover {
+  background: #e3ebf4;
+  color: #172b4d;
+}
+
+.nav-item.active {
+  background: #dbeafe;
+  box-shadow: inset 3px 0 #2563eb;
+  color: #174ea6;
+}
+
+.nav-item.active .nav-icon,
+.nav-icon {
+  color: #376b82;
+}
+
+.topbar {
+  background: #ffffff;
+  border-bottom-color: #d7e0e8;
+}
+
+.main-content,
+.content-wrap {
+  background: #f7f9fb;
+}
+
+.breadcrumbs strong,
+.page-heading h1,
+.panel h2,
+.drawer-heading h2,
+.metric-card strong {
+  color: #101828;
+}
+
+.subheading,
+.panel-heading p,
+.metric-card span,
+.incident-row small,
+.api-title p,
+.detector-heading p,
+.benchmark-card > p,
+.health-card p,
+.scenario-description,
+.drawer-heading p:not(.eyebrow) {
+  color: #475467;
+}
+
+.health-pill {
+  background: #dcfce7;
+  border-color: #9bd6b1;
+  color: #166534;
+}
+
+.metric-card,
+.panel {
+  background: #ffffff;
+  border-color: #d7e0e8;
+  box-shadow: 0 2px 8px #1018280a;
+}
+
+.metric-card:has(.metric-icon.blue) {
+  border-left: 4px solid #3b82f6;
+  box-shadow: 0 2px 8px #1018280a;
+}
+
+.metric-card:has(.metric-icon.red) {
+  border-left: 4px solid #dc4a43;
+  box-shadow: 0 2px 8px #1018280a;
+}
+
+.metric-card:has(.metric-icon.amber) {
+  border-left: 4px solid #d89520;
+  box-shadow: 0 2px 8px #1018280a;
+}
+
+.metric-card:has(.metric-icon.cyan) {
+  border-left: 4px solid #20a39e;
+  box-shadow: 0 2px 8px #1018280a;
+}
+
+.metric-card span {
+  color: #475467;
+}
+
+.metric-card strong {
+  font-size: 28px;
+}
+
+.metric-icon.blue,
+.detector-icon.rule,
+.flask-icon {
+  background: #eaf2ff !important;
+  color: #1d4ed8 !important;
+  border-color: #9dbcf5 !important;
+}
+
+.metric-icon.red,
+.incident-symbol.critical,
+.incident-symbol.high {
+  background: #fff0ee !important;
+  color: #b42318 !important;
+  border-color: #e7a9a2 !important;
+}
+
+.metric-icon.amber,
+.detector-icon.ml,
+.incident-symbol.medium {
+  background: #fff7df !important;
+  color: #a16207 !important;
+  border-color: #e1bd73 !important;
+}
+
+.metric-icon.cyan {
+  background: #e6f8f5 !important;
+  color: #0f766e !important;
+  border-color: #95d4ca !important;
+}
+
+.metric-icon .ui-icon,
+.detector-icon .ui-icon {
+  stroke-width: 2.35;
+}
+
+.metric-card:has(.metric-icon.red) strong {
+  color: #b42318;
+}
+
+.metric-card:has(.metric-icon.amber) strong {
+  color: #8a5a08;
+}
+
+.metric-card small {
+  color: #15803d;
+}
+
+.traffic-chart-panel,
+.incidents-panel,
+.chart-wrap,
+.events-panel .panel-heading,
+.table-panel .panel-heading,
+.outline-button,
+.primary-button {
+  background: #ffffff;
+  background-image: none;
+}
+
+.legend,
+.analytics-foot,
+.benchmark-row span,
+.analytics-stat span {
+  color: #667085;
+}
+
+.grid-lines line,
+.chart-axis {
+  stroke: #d9e2ea;
+}
+
+.chart-labels text,
+.chart-axis-label {
+  fill: #667085;
+}
+
+.allowed-line {
+  stroke: #2563eb;
+}
+
+.anomaly-line {
+  stroke: #d89520;
+}
+
+.blocked-line {
+  stroke: #dc4a43;
+}
+
+.incident-list,
+.table-wrap,
+.incident-detail,
+.api-meta,
+.benchmark-row,
+th,
+td {
+  border-color: #e1e7ed;
+}
+
+.incident-row:hover {
+  background: #f6f9fc;
+}
+
+.severity {
+  border: 1px solid currentColor;
+}
+
+.critical-tag,
+.high-tag {
+  color: #b42318;
+  background: #fff0ee;
+  border-color: #e7a9a2;
+}
+
+.medium-tag {
+  color: #8a5a08;
+  background: #fff7df;
+  border-color: #e1bd73;
+}
+
+.outline-button,
+.link-button {
+  border-color: #94a9bb;
+  background: #ffffff;
+  color: #1d4ed8;
+}
+
+.outline-button:hover,
+.link-button:hover {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+.primary-button,
+.primary-button:hover {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.primary-button:hover {
+  background: #1d4ed8;
+}
+
+.route-chip,
+.demo-badge,
+.session-badge,
+.read-only-badge {
+  background: #eff6ff;
+  border-color: #b8d0f5;
+  color: #1d4ed8;
+}
+
+.playground-drawer {
+  background: #ffffff;
+  border-left-color: #d1dce7;
+  box-shadow: -18px 0 40px #1018281a;
+}
+
+.playground-drawer select,
+.parameter-list,
+.drawer-callout,
+.simulation-banner {
+  background: #f8fafc;
+  border-color: #d4dee8;
+}
+
+.field-label,
+.parameters-heading,
+.parameter-row b,
+.drawer-heading h2,
+.simulation-banner strong {
+  color: #1d2939;
+}
+
+.parameter-row,
+.parameter-row span,
+.drawer-callout {
+  color: #475467;
+  border-color: #e1e7ed;
+}
+
+.healthy-text,
+.health-card > b {
+  color: #15803d !important;
+}
+
+.warning-text {
+  color: #8a5a08 !important;
+}
+
+.benchmark-row b,
+.analytics-foot b {
+  color: #344054 !important;
+}
+
+.status-dot,
+.pulse,
+.health-indicator,
+.api-status {
+  background: #15803d;
+  box-shadow: 0 0 0 4px #dcfce7;
+}
+
+.amber-indicator,
+.api-status.warning {
+  background: #a16207;
+  box-shadow: 0 0 0 4px #fff1cf;
+}
+
+.toast {
+  background: #dcfce7;
+  border-color: #9bd6b1;
+  color: #166534;
+}
+
+/* Light result and risk states. The previous dark-theme fills were still
+   winning on the simulator result and audit table badges. */
+.simulation-result {
+  background: #ecfdf3;
+  border-color: #a7d8b7;
+  color: #14532d;
+}
+
+.simulation-result.anomaly-result {
+  background: #fff8e7;
+  border-color: #e2bf78;
+  color: #7a4b00;
+}
+
+.simulation-result .result-heading strong {
+  color: #166534;
+}
+
+.simulation-result.anomaly-result .result-heading strong {
+  color: #8a5a08;
+}
+
+.simulation-result .result-heading small,
+.simulation-result .simulation-metrics small {
+  color: #667085;
+}
+
+.simulation-result .simulation-metrics {
+  border-top-color: #b9dec4;
+}
+
+.simulation-result.anomaly-result .simulation-metrics {
+  border-top-color: #e7cc96;
+}
+
+.simulation-result .simulation-metrics b {
+  color: #166534;
+}
+
+.simulation-result.anomaly-result .simulation-metrics b {
+  color: #8a5a08;
+}
+
+.simulation-result .result-dot {
+  background: #15803d;
+  box-shadow: 0 0 0 4px #d7f3df;
+}
+
+.simulation-result.anomaly-result .result-dot {
+  background: #a16207;
+  box-shadow: 0 0 0 4px #ffedbd;
+}
+
+.risk {
+  border: 1px solid currentColor;
+  font-weight: 600;
+}
+
+.risk.high {
+  color: #b42318;
+  background: #fff0ee;
+  border-color: #e7a9a2;
+}
+
+.risk.medium {
+  color: #8a5a08;
+  background: #fff7df;
+  border-color: #e1bd73;
+}
+
+.risk.low {
+  color: #166534;
+  background: #dcfce7;
+  border-color: #9bd6b1;
+}
+
+th {
+  background: #f1f5f9;
+  color: #475467;
+}
+
+.incident-symbol.blocked {
+  background: #fff0ee !important;
+  color: #b42318 !important;
+  border: 1px solid #e7a9a2;
+}
+
+.incident-symbol.review {
+  background: #fff7df !important;
+  color: #a16207 !important;
+  border: 1px solid #e1bd73;
+}
+
+.incident-symbol .ui-icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.35;
+}
+
+/* Improve contrast for API inventory supporting text on the light theme. */
+.api-summary {
+  color: #526173;
+}
+
+.api-summary b,
+.api-meta b {
+  color: #344054;
+}
+
+.api-meta {
+  color: #526173;
+}
