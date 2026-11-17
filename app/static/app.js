@@ -295,7 +295,6 @@ async function loadSystemStatus() {
     const ruleEngineLoaded = status.rule_engine === 'loaded';
     const loaded = status.ml?.status === 'loaded';
     document.querySelector('#gatewayHealthStatus').textContent = gatewayHealthy ? 'Gateway healthy' : 'Gateway unavailable';
-    document.querySelector('#gatewayHealthMeta').textContent = gatewayHealthy ? 'Service responding' : 'Service status unavailable';
     document.querySelector('#gatewayHealthIndicator').classList.toggle('amber-indicator', !gatewayHealthy);
     document.querySelector('#gatewayCardStatus').textContent = gatewayHealthy ? 'Operational' : 'Unavailable';
     document.querySelector('#gatewayCardIndicator').classList.toggle('amber-indicator', !gatewayHealthy);
@@ -312,7 +311,6 @@ async function loadSystemStatus() {
     document.querySelector('#databaseHealthIndicator').classList.toggle('amber-indicator', !databaseConnected);
   } catch {
     document.querySelector('#gatewayHealthStatus').textContent = 'Gateway unavailable';
-    document.querySelector('#gatewayHealthMeta').textContent = 'Service status unavailable';
     document.querySelector('#gatewayHealthIndicator').classList.add('amber-indicator');
     document.querySelector('#gatewayCardStatus').textContent = 'Unavailable';
     document.querySelector('#gatewayCardIndicator').classList.add('amber-indicator');
