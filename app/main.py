@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.detectors.ml_anomaly import MLAnomalyDetector
-from app.database import active_incidents, db_available, init_db, overview_metrics, persist_inspection, recent_events
+from app.database import active_incidents, db_available, init_db, overview_metrics, persist_inspection, recent_events, risk_for
 from app.ml.features import TrafficWindow
 
 app = FastAPI(
@@ -168,6 +168,8 @@ def inspect_request(payload: InspectRequest) -> dict[str, Any]:
         reason_code = None
 
     latency_ms = round((time.perf_counter() - started) * 1000, 2)
+    ml_payload = ml_result.as_dict() if ml_result else None
+    risk, risk_score = risk_for(decision, ml_payload)
     result = {
         "request_id": f"req_{uuid4().hex[:10]}",
         "method": payload.method,
@@ -182,7 +184,9 @@ def inspect_request(payload: InspectRequest) -> dict[str, Any]:
         "reason_code": reason_code,
         "rule_decision": rule_decision,
         "rule_reason_code": rule_reason_code,
-        "ml": ml_result.as_dict() if ml_result else None,
+        "ml": ml_payload,
+        "risk": risk,
+        "risk_score": risk_score,
         "latency_ms": latency_ms,
     }
     if db_available():

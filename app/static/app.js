@@ -101,13 +101,7 @@ Object.entries(scenarios).forEach(([value, scenario]) => {
   scenarioSelect.append(option);
 });
 
-let eventLog = [
-  { time: '14:37:21', requestId: 'req_7a31f04b2c', method: 'GET', path: '/users/search', decision: 'Blocked', detector: 'API abuse (Rate Limit)', risk: 'High', latency: '38 ms', reason: 'API_ABUSE' },
-  { time: '14:36:48', requestId: 'req_91d052c4a8', method: 'GET', path: '/customers/export', decision: 'Blocked', detector: 'Data Exfiltration (Policy)', risk: 'High', latency: '71 ms', reason: 'DATA_EXPORT' },
-  { time: '14:36:15', requestId: 'req_46bc2e119f', method: 'POST', path: '/auth/login', decision: 'Anomaly review', detector: 'Credential Stuffing (ML)', risk: 'Medium', latency: '45 ms', reason: 'UNUSUAL_BEHAVIOR' },
-  { time: '14:35:52', requestId: 'req_d200c9e5bb', method: 'GET', path: '/users/search', decision: 'Allowed', detector: 'Normal Traffic', risk: 'Low', latency: '32 ms', reason: '' },
-  { time: '14:35:09', requestId: 'req_20a8b5d810', method: 'POST', path: '/auth/login', decision: 'Blocked', detector: 'Brute Force (Rules)', risk: 'High', latency: '49 ms', reason: 'BRUTE_FORCE' },
-];
+let eventLog = [];
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
@@ -138,16 +132,86 @@ function decisionClass(decision) {
 function renderEventRows(targetId, audit = false) {
   const target = document.querySelector(`#${targetId}`);
   if (!target) return;
+  if (!eventLog.length) {
+    const columns = audit ? 6 : 6;
+    target.innerHTML = `<tr><td class="empty-table" colspan="${columns}">No events recorded yet.</td></tr>`;
+    return;
+  }
   target.innerHTML = eventLog.map((event) => audit
     ? `<tr><td>${escapeHtml(event.time)}</td><td><code>${escapeHtml(event.requestId)}</code></td><td><code>${escapeHtml(event.method)} ${escapeHtml(event.path)}</code></td><td><span class="decision ${decisionClass(event.decision)}"><i></i>${escapeHtml(event.decision)}</span></td><td>${escapeHtml(event.reason || 'No rule match')}</td><td>${escapeHtml(event.latency)}</td></tr>`
     : `<tr><td>${escapeHtml(event.time)}</td><td><code>${escapeHtml(event.method)} ${escapeHtml(event.path)}</code></td><td><span class="decision ${decisionClass(event.decision)}"><i></i>${escapeHtml(event.decision)}</span></td><td>${escapeHtml(event.detector)}</td><td><span class="risk ${event.risk.toLowerCase()}">${escapeHtml(event.risk)}</span></td><td>${escapeHtml(event.latency)}</td></tr>`
   ).join('');
 }
 
+function renderEmptyState(target, message) {
+  if (!target) return;
+  target.innerHTML = `<div class="empty-state">${escapeHtml(message)}</div>`;
+}
+
+function renderMarkup(target, markup) {
+  if (!target) return;
+  target.innerHTML = markup;
+}
+
+function clearInitialDemoState() {
+  document.querySelector('#requestsMetric').textContent = '0';
+  document.querySelector('#blockedMetric').textContent = '0';
+  document.querySelector('#anomaliesMetric').textContent = '0';
+  document.querySelector('#latencyMetric').innerHTML = '0 <b>ms</b>';
+  document.querySelectorAll('.metric-card small').forEach((element) => {
+    element.textContent = 'Waiting for stored events';
+  });
+  renderEmptyState(document.querySelector('.chart-wrap'), 'No traffic recorded yet.');
+  renderEmptyState(document.querySelector('.incidents-panel .incident-list'), 'No open incidents.');
+  renderEmptyState(document.querySelector('.incident-cards'), 'No incidents recorded yet.');
+  renderEmptyState(document.querySelector('.api-grid'), 'No API inventory data available yet.');
+  renderEmptyState(document.querySelector('.analytics-grid'), 'No evaluation metrics available yet.');
+  document.querySelector('.incidents-panel .panel-heading p').textContent = 'No open incidents';
+  document.querySelector('.page-tag').textContent = '0 OPEN';
+  document.querySelector('.alert-count').textContent = '0';
+  renderEvents();
+}
+
 function renderEvents() {
   renderEventRows('eventsBody');
   renderEventRows('trafficBody');
   renderEventRows('auditBody', true);
+  renderTrafficChart();
+}
+
+function renderTrafficChart() {
+  const chart = document.querySelector('.chart-wrap');
+  if (!chart) return;
+  const points = eventLog
+    .map((event) => ({
+      ...event,
+      timestamp: new Date(event.occurredAt || event.time).getTime(),
+    }))
+    .filter((event) => Number.isFinite(event.timestamp));
+  if (!points.length) {
+    renderEmptyState(chart, 'No traffic recorded yet.');
+    return;
+  }
+
+  const bucketCount = 12;
+  const latest = Math.max(...points.map((event) => event.timestamp));
+  const earliest = Math.min(...points.map((event) => event.timestamp));
+  const windowSize = Math.max(latest - earliest, 15 * 60 * 1000);
+  const bucketSize = windowSize / bucketCount;
+  const buckets = Array.from({ length: bucketCount }, () => ({ allowed: 0, review: 0, blocked: 0 }));
+  points.forEach((event) => {
+    const index = Math.min(bucketCount - 1, Math.floor((event.timestamp - (latest - windowSize)) / bucketSize));
+    const key = event.decision === 'Blocked' ? 'blocked' : event.decision === 'Anomaly review' ? 'review' : 'allowed';
+    buckets[index][key] += 1;
+  });
+  const maximum = Math.max(...buckets.map((bucket) => bucket.allowed + bucket.review + bucket.blocked), 1);
+  const start = latest - windowSize;
+  const labels = buckets.map((_, index) => new Date(start + index * bucketSize).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }));
+  chart.innerHTML = `<div class="traffic-bars" aria-label="Stored gateway events over time">${buckets.map((bucket, index) => {
+    const total = bucket.allowed + bucket.review + bucket.blocked;
+    const scale = (value) => value ? Math.max(4, (value / maximum) * 170) : 0;
+    return `<div class="traffic-bar-group" title="${total} stored event${total === 1 ? '' : 's'}"><div class="traffic-bar"><span class="bar-segment allowed-bar" style="height:${scale(bucket.allowed)}px"></span><span class="bar-segment review-bar" style="height:${scale(bucket.review)}px"></span><span class="bar-segment blocked-bar" style="height:${scale(bucket.blocked)}px"></span></div><small>${escapeHtml(labels[index])}</small></div>`;
+  }).join('')}</div>`;
 }
 
 function showView(viewName) {
@@ -176,42 +240,11 @@ function renderScenarioDetails() {
   document.querySelector('#scenarioDescription').textContent = scenario.description;
   document.querySelector('#scenarioParameters').innerHTML = [
     ['Route', `${scenario.method} ${scenario.route}`],
-    ['Requests', formatNumber(scenario.requestCount)],
+    ['Modeled rate', `${formatNumber(scenario.requestCount)} req/min`],
     ['Duration', scenario.duration],
     ['User profile', scenario.clientProfile],
     ['Expected check', scenario.expected],
   ].map(([label, value]) => `<div class="parameter-row"><span>${escapeHtml(label)}</span><b>${escapeHtml(value)}</b></div>`).join('');
-}
-
-function updateMetrics(result, scenario) {
-  const requests = Number(document.querySelector('#requestsMetric').textContent.replace(/,/g, '')) + scenario.requestCount;
-  document.querySelector('#requestsMetric').textContent = formatNumber(requests);
-  if (result.decision === 'block') {
-    const blocked = Number(document.querySelector('#blockedMetric').textContent.replace(/,/g, '')) + scenario.requestCount;
-    document.querySelector('#blockedMetric').textContent = formatNumber(blocked);
-  }
-  if (result.decision === 'review' || result.ml?.status === 'anomaly') {
-    const anomalies = Number(document.querySelector('#anomaliesMetric').textContent.replace(/,/g, '')) + 1;
-    document.querySelector('#anomaliesMetric').textContent = formatNumber(anomalies);
-  }
-}
-
-function addSimulationEvent(result, scenario) {
-  const outcome = result.decision === 'block' ? 'Blocked' : result.decision === 'review' ? 'Anomaly review' : 'Allowed';
-  const detector = result.decision === 'block' ? 'Static rules' : result.ml ? (result.ml.status === 'anomaly' ? 'ML anomaly' : 'Rules + ML') : 'Rule engine';
-  eventLog.unshift({
-    time: new Date().toLocaleTimeString('en-US', { hour12: false }),
-    requestId: result.request_id,
-    method: scenario.method,
-    path: scenario.route,
-    decision: outcome,
-    detector,
-    risk: outcome === 'Blocked' ? 'High' : outcome === 'Anomaly review' ? scenario.risk : 'Low',
-    latency: `${result.latency_ms} ms`,
-    reason: result.reason_code || '',
-  });
-  eventLog = eventLog.slice(0, 12);
-  renderEvents();
 }
 
 async function runSimulation(event) {
@@ -224,13 +257,15 @@ async function runSimulation(event) {
     const response = await fetch('/inspect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ method: scenario.method, path: scenario.route, query: scenario.query, body: scenario.body, simulation: scenario.simulation }) });
     const result = await response.json();
     if (!response.ok) throw new Error(result.detail?.[0]?.msg || 'Simulation failed');
-    addSimulationEvent(result, scenario);
-    updateMetrics(result, scenario);
+    const databaseLoaded = await loadDatabaseData();
+    if (!databaseLoaded) {
+      showToast('Simulation evaluated, but the result was not persisted');
+    }
     const outcome = result.decision === 'block' ? 'Blocked by gateway' : result.decision === 'review' ? 'Anomaly review created' : 'Allowed by gateway';
     document.querySelector('#simulationOutcome').textContent = outcome;
     document.querySelector('#simulationSummary').textContent = result.ml ? `Rules and ML evaluated ${scenario.label.toLowerCase()}.` : 'Rule engine evaluated the representative request.';
     document.querySelector('#simulationDecision').textContent = result.decision.toUpperCase();
-    document.querySelector('#simulationDetector').textContent = result.ml ? 'Rules + ML' : 'Rules only';
+    document.querySelector('#simulationDetector').textContent = result.detector || (result.ml ? 'rule + ml-anomaly' : 'rule-detector');
     document.querySelector('#simulationLatency').textContent = `${result.latency_ms} ms`;
     document.querySelector('#simulationResult').classList.remove('hidden');
     document.querySelector('#simulationResult').classList.toggle('anomaly-result', result.decision !== 'allow');
@@ -277,12 +312,20 @@ async function loadSystemStatus() {
 
 async function loadDatabaseData() {
   try {
-    const [eventsResponse, overviewResponse] = await Promise.all([fetch('/api/events?limit=50'), fetch('/api/overview')]);
-    if (!eventsResponse.ok || !overviewResponse.ok) throw new Error('database unavailable');
+    const [eventsResponse, overviewResponse, incidentsResponse] = await Promise.all([
+      fetch('/api/events?limit=50'),
+      fetch('/api/overview'),
+      fetch('/api/incidents?limit=20'),
+    ]);
+    if (!eventsResponse.ok || !overviewResponse.ok || !incidentsResponse.ok) throw new Error('database unavailable');
     const eventsPayload = await eventsResponse.json();
     const overviewPayload = await overviewResponse.json();
-    if (eventsPayload.database === 'connected' && eventsPayload.events.length) {
-      eventLog = eventsPayload.events.map((event) => ({ ...event, time: formatEventTime(event.time) }));
+    const incidentsPayload = await incidentsResponse.json();
+    const databaseConnected = eventsPayload.database === 'connected'
+      && overviewPayload.database === 'connected'
+      && incidentsPayload.database === 'connected';
+    if (eventsPayload.database === 'connected') {
+      eventLog = eventsPayload.events.map((event) => ({ ...event, occurredAt: event.time, time: formatEventTime(event.time) }));
       renderEvents();
     }
     if (overviewPayload.database === 'connected') {
@@ -292,12 +335,21 @@ async function loadDatabaseData() {
       document.querySelector('#anomaliesMetric').textContent = formatNumber(metrics.anomalies_today);
       document.querySelector('#latencyMetric').innerHTML = `${metrics.p95_latency_ms} <b>ms</b>`;
     }
+    if (incidentsPayload.database === 'connected') {
+      const incidents = incidentsPayload.incidents;
+      document.querySelector('.incidents-panel .panel-heading p').textContent = `${incidents.length} open incident${incidents.length === 1 ? '' : 's'}`;
+      document.querySelector('.page-tag').textContent = `${incidents.length} OPEN`;
+      document.querySelector('.alert-count').textContent = incidents.length;
+      renderMarkup(document.querySelector('.incidents-panel .incident-list'), incidents.length ? incidents.map((incident) => `<div class="incident-row"><span class="incident-symbol ${incident.severity.toLowerCase()}">△</span><div><strong>${escapeHtml(incident.title)}</strong><small>${escapeHtml(incident.endpoint)} · ${incident.event_count} event${incident.event_count === 1 ? '' : 's'}</small></div><b class="severity ${incident.severity.toLowerCase()}-tag">${escapeHtml(incident.severity)}</b></div>`).join('') : '<div class="empty-state">No open incidents.</div>');
+      renderMarkup(document.querySelector('.incident-cards'), incidents.length ? incidents.map((incident) => `<article class="panel incident-card"><div class="incident-card-heading"><span class="incident-symbol ${incident.severity.toLowerCase()}">△</span><div><span class="eyebrow">${escapeHtml(incident.severity)} · ${escapeHtml(incident.status)}</span><h2>${escapeHtml(incident.title)}</h2><p>${escapeHtml(incident.endpoint)} · ${incident.event_count} event${incident.event_count === 1 ? '' : 's'}</p></div></div></article>`).join('') : '<div class="empty-state">No incidents recorded yet.</div>');
+    }
+    return databaseConnected;
   } catch {
-    // The seeded demo rows remain visible when the database is not running.
+    return false;
   }
 }
 
+clearInitialDemoState();
 renderScenarioDetails();
-renderEvents();
 loadSystemStatus();
 loadDatabaseData();
