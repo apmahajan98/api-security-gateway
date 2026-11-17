@@ -177,18 +177,31 @@ def recent_events(limit: int = 50) -> list[dict[str, Any]]:
 
 
 def api_inventory() -> list[dict[str, Any]]:
-    """Summarize observed routes from persisted gateway events."""
+    """Summarize observed routes into live service-level API groups."""
     with SessionLocal() as session:
         rows = session.scalars(select(SecurityEvent).order_by(SecurityEvent.occurred_at.desc())).all()
 
-    grouped: dict[tuple[str, str], dict[str, Any]] = {}
+    service_definitions = (
+        ("Customer Platform API", ("/customers", "/users")),
+        ("Identity & Access API", ("/auth",)),
+        ("Internal Operations API", ("/reports", "/metrics", "/sync")),
+    )
+
+    def service_for(path: str) -> str:
+        for name, prefixes in service_definitions:
+            if any(path == prefix or path.startswith(f"{prefix}/") for prefix in prefixes):
+                return name
+        return "Internal Operations API"
+
+    grouped: dict[str, dict[str, Any]] = {}
     for row in rows:
-        key = (row.method, row.path)
+        name = service_for(row.path)
         item = grouped.setdefault(
-            key,
-            {"method": row.method, "path": row.path, "requests": 0, "allowed": 0, "blocked": 0, "review": 0, "latencies": []},
+            name,
+            {"name": name, "routes": set(), "requests": 0, "allowed": 0, "blocked": 0, "review": 0, "latencies": []},
         )
         count = row.request_count
+        item["routes"].add(row.path)
         item["requests"] += count
         item[{"allow": "allowed", "block": "blocked", "review": "review"}[row.decision]] += count
         item["latencies"].append((row.latency_ms, count))
@@ -199,8 +212,9 @@ def api_inventory() -> list[dict[str, Any]]:
         status = "Review" if item["blocked"] or item["review"] else "Healthy"
         inventory.append(
             {
-                "name": f"{item['method']} {item['path']}",
-                "endpoint": item["path"],
+                "name": item["name"],
+                "routes": sorted(item["routes"]),
+                "route_count": len(item["routes"]),
                 "status": status,
                 "requests": total,
                 "allowed_percent": round(item["allowed"] / total * 100, 1) if total else 0,
