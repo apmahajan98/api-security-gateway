@@ -174,7 +174,6 @@ function clearInitialDemoState() {
 
 function renderEvents() {
   renderEventRows('eventsBody');
-  renderEventRows('trafficBody');
   renderEventRows('auditBody', true);
 }
 
