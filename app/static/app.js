@@ -190,19 +190,23 @@ function renderTrafficSeries(series) {
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;
   const maximum = Math.max(...series.map((bucket) => bucket.allowed + bucket.review + bucket.blocked), 1);
+  const scaleY = (value) => {
+    const scaled = Math.log1p(value) / Math.log1p(maximum);
+    return padding.top + plotHeight - scaled * plotHeight;
+  };
   const pointsFor = (key) => series.map((bucket, index) => {
     const x = padding.left + (index / (series.length - 1)) * plotWidth;
-    const y = padding.top + plotHeight - (bucket[key] / maximum) * plotHeight;
+    const y = scaleY(bucket[key]);
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(' ');
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
     const y = padding.top + plotHeight - ratio * plotHeight;
-    const value = Math.round(maximum * ratio);
+    const value = Math.round(Math.expm1(Math.log1p(maximum) * ratio));
     return `<line class="chart-grid-line" x1="${padding.left}" y1="${y.toFixed(1)}" x2="${width - padding.right}" y2="${y.toFixed(1)}" /><text class="chart-axis-label" text-anchor="end" x="${padding.left - 8}" y="${(y + 3).toFixed(1)}">${formatNumber(value)}</text>`;
   }).join('');
   const labelStep = Math.max(1, Math.floor(series.length / 6));
   const labels = series.filter((_, index) => index % labelStep === 0).map((bucket) => new Date(bucket.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }));
-  chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Stored gateway traffic over the last 24 hours"><g aria-hidden="true">${yTicks}</g><line class="chart-axis" x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${padding.top + plotHeight}" /><line class="chart-axis" x1="${padding.left}" y1="${padding.top + plotHeight}" x2="${width - padding.right}" y2="${padding.top + plotHeight}" /><polyline class="line allowed-line" points="${pointsFor('allowed')}" /><polyline class="line anomaly-line" points="${pointsFor('review')}" /><polyline class="line blocked-line" points="${pointsFor('blocked')}" /><text class="chart-axis-label" x="${padding.left}" y="${height - 6}">${escapeHtml(labels[0] || '')}</text><text class="chart-axis-label" text-anchor="middle" x="${width / 2}" y="${height - 6}">${escapeHtml(labels[Math.floor(labels.length / 2)] || '')}</text><text class="chart-axis-label" text-anchor="end" x="${width - padding.right}" y="${height - 6}">${escapeHtml(labels[labels.length - 1] || '')}</text></svg>`;
+  chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Stored gateway traffic over the last 24 hours on a logarithmic scale"><g aria-hidden="true">${yTicks}</g><line class="chart-axis" x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${padding.top + plotHeight}" /><line class="chart-axis" x1="${padding.left}" y1="${padding.top + plotHeight}" x2="${width - padding.right}" y2="${padding.top + plotHeight}" /><polyline class="line allowed-line" points="${pointsFor('allowed')}" /><polyline class="line anomaly-line" points="${pointsFor('review')}" /><polyline class="line blocked-line" points="${pointsFor('blocked')}" /><text class="chart-axis-label" x="${padding.left}" y="${padding.top - 6}">log scale</text><text class="chart-axis-label" x="${padding.left}" y="${height - 6}">${escapeHtml(labels[0] || '')}</text><text class="chart-axis-label" text-anchor="middle" x="${width / 2}" y="${height - 6}">${escapeHtml(labels[Math.floor(labels.length / 2)] || '')}</text><text class="chart-axis-label" text-anchor="end" x="${width - padding.right}" y="${height - 6}">${escapeHtml(labels[labels.length - 1] || '')}</text></svg>`;
 }
 
 function renderApiInventory(apis) {
