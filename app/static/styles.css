@@ -436,7 +436,7 @@ body {
   --red: #d7867a;
   --amber: #d6aa6d;
   --cyan: #91bebc;
-  --sans: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+  --sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
 }
 
@@ -729,7 +729,7 @@ td {
   --red: #b54f4b;
   --amber: #95651e;
   --cyan: #327579;
-  --sans: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+  --sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
 }
 
