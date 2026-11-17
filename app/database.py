@@ -1,8 +1,8 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import DateTime, Float, Index, Integer, JSON, String, Text, create_engine, func, select
+from sqlalchemy import DateTime, Float, Index, Integer, JSON, String, Text, create_engine, func, select, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 
@@ -32,6 +32,7 @@ class SecurityEvent(Base):
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     method: Mapped[str] = mapped_column(String(10), nullable=False)
     path: Mapped[str] = mapped_column(String(2048), nullable=False)
+    request_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     decision: Mapped[str] = mapped_column(String(16), nullable=False)
     classification: Mapped[str] = mapped_column(String(32), nullable=False)
     detector: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -66,6 +67,15 @@ class Incident(Base):
 
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
+    # Keep existing local development volumes compatible with the request-count
+    # metric introduced after the initial schema was created.
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE security_events "
+                "ADD COLUMN IF NOT EXISTS request_count INTEGER NOT NULL DEFAULT 1"
+            )
+        )
 
 
 def db_available() -> bool:
@@ -108,6 +118,7 @@ def persist_inspection(result: dict[str, Any], payload: dict[str, Any]) -> None:
                 occurred_at=now,
                 method=result["method"],
                 path=result["path"],
+                request_count=max(1, int(payload.get("request_count", 1))),
                 decision=result["decision"],
                 classification=result["classification"],
                 detector=result["detector"],
@@ -188,8 +199,35 @@ def active_incidents(limit: int = 20) -> list[dict[str, Any]]:
 def overview_metrics() -> dict[str, Any]:
     with SessionLocal() as session:
         today = datetime.now(timezone.utc).date()
-        total = session.scalar(select(func.count(SecurityEvent.id)).where(func.date(SecurityEvent.occurred_at) == today)) or 0
-        blocked = session.scalar(select(func.count(SecurityEvent.id)).where(SecurityEvent.decision == "block", func.date(SecurityEvent.occurred_at) == today)) or 0
-        anomalies = session.scalar(select(func.count(SecurityEvent.id)).where(SecurityEvent.decision == "review", func.date(SecurityEvent.occurred_at) == today)) or 0
+        total = session.scalar(select(func.coalesce(func.sum(SecurityEvent.request_count), 0)).where(func.date(SecurityEvent.occurred_at) == today)) or 0
+        blocked = session.scalar(select(func.coalesce(func.sum(SecurityEvent.request_count), 0)).where(SecurityEvent.decision == "block", func.date(SecurityEvent.occurred_at) == today)) or 0
+        anomalies = session.scalar(select(func.coalesce(func.sum(SecurityEvent.request_count), 0)).where(SecurityEvent.decision == "review", func.date(SecurityEvent.occurred_at) == today)) or 0
         p95 = session.scalar(select(func.percentile_cont(0.95).within_group(SecurityEvent.latency_ms)).where(func.date(SecurityEvent.occurred_at) == today))
         return {"requests_today": total, "blocked_today": blocked, "anomalies_today": anomalies, "p95_latency_ms": round(float(p95 or 0), 2)}
+
+
+def traffic_series(hours: int = 24, buckets: int = 24) -> list[dict[str, Any]]:
+    """Return continuous traffic buckets using represented request counts."""
+    now = datetime.now(timezone.utc)
+    start = now - timedelta(hours=hours)
+    bucket_seconds = (hours * 60 * 60) / buckets
+    values = [
+        {
+            "timestamp": (start + timedelta(seconds=index * bucket_seconds)).isoformat(),
+            "allowed": 0,
+            "review": 0,
+            "blocked": 0,
+        }
+        for index in range(buckets)
+    ]
+    with SessionLocal() as session:
+        rows = session.scalars(
+            select(SecurityEvent).where(SecurityEvent.occurred_at >= start).order_by(SecurityEvent.occurred_at)
+        ).all()
+        for row in rows:
+            occurred_at = row.occurred_at
+            if occurred_at.tzinfo is None:
+                occurred_at = occurred_at.replace(tzinfo=timezone.utc)
+            index = min(buckets - 1, max(0, int((occurred_at - start).total_seconds() / bucket_seconds)))
+            values[index][row.decision] += row.request_count
+    return values

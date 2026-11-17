@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.detectors.ml_anomaly import MLAnomalyDetector
-from app.database import active_incidents, db_available, init_db, overview_metrics, persist_inspection, recent_events, risk_for
+from app.database import active_incidents, db_available, init_db, overview_metrics, persist_inspection, recent_events, risk_for, traffic_series
 from app.ml.features import TrafficWindow
 
 app = FastAPI(
@@ -58,6 +58,7 @@ class InspectRequest(BaseModel):
     query: str = Field(default="", max_length=4096)
     body: Any = None
     simulation: SimulationTraffic | None = None
+    request_count: int = Field(default=1, ge=1, le=100_000)
 
 
 INJECTION_RULES = (
@@ -219,3 +220,10 @@ def api_overview() -> dict[str, Any]:
     if not db_available():
         return {"metrics": {"requests_today": 0, "blocked_today": 0, "anomalies_today": 0, "p95_latency_ms": 0}, "database": "unavailable"}
     return {"metrics": overview_metrics(), "database": "connected"}
+
+
+@app.get("/api/traffic", tags=["dashboard"])
+def api_traffic() -> dict[str, Any]:
+    if not db_available():
+        return {"traffic": [], "database": "unavailable"}
+    return {"traffic": traffic_series(), "database": "connected"}

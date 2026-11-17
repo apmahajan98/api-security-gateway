@@ -176,42 +176,29 @@ function renderEvents() {
   renderEventRows('eventsBody');
   renderEventRows('trafficBody');
   renderEventRows('auditBody', true);
-  renderTrafficChart();
 }
 
-function renderTrafficChart() {
+function renderTrafficSeries(series) {
   const chart = document.querySelector('.chart-wrap');
   if (!chart) return;
-  const points = eventLog
-    .map((event) => ({
-      ...event,
-      timestamp: new Date(event.occurredAt || event.time).getTime(),
-    }))
-    .filter((event) => Number.isFinite(event.timestamp));
-  if (!points.length) {
+  if (!series?.length || !series.some((bucket) => bucket.allowed + bucket.review + bucket.blocked > 0)) {
     renderEmptyState(chart, 'No traffic recorded yet.');
     return;
   }
-
-  const bucketCount = 12;
-  const latest = Math.max(...points.map((event) => event.timestamp));
-  const earliest = Math.min(...points.map((event) => event.timestamp));
-  const windowSize = Math.max(latest - earliest, 15 * 60 * 1000);
-  const bucketSize = windowSize / bucketCount;
-  const buckets = Array.from({ length: bucketCount }, () => ({ allowed: 0, review: 0, blocked: 0 }));
-  points.forEach((event) => {
-    const index = Math.min(bucketCount - 1, Math.floor((event.timestamp - (latest - windowSize)) / bucketSize));
-    const key = event.decision === 'Blocked' ? 'blocked' : event.decision === 'Anomaly review' ? 'review' : 'allowed';
-    buckets[index][key] += 1;
-  });
-  const maximum = Math.max(...buckets.map((bucket) => bucket.allowed + bucket.review + bucket.blocked), 1);
-  const start = latest - windowSize;
-  const labels = buckets.map((_, index) => new Date(start + index * bucketSize).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }));
-  chart.innerHTML = `<div class="traffic-bars" aria-label="Stored gateway events over time">${buckets.map((bucket, index) => {
+  const width = 760;
+  const height = 220;
+  const padding = { left: 42, right: 16, top: 18, bottom: 28 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const maximum = Math.max(...series.map((bucket) => bucket.allowed + bucket.review + bucket.blocked), 1);
+  const pointsFor = (key) => series.map((bucket, index) => {
+    const x = padding.left + (index / (series.length - 1)) * plotWidth;
     const total = bucket.allowed + bucket.review + bucket.blocked;
-    const scale = (value) => value ? Math.max(4, (value / maximum) * 170) : 0;
-    return `<div class="traffic-bar-group" title="${total} stored event${total === 1 ? '' : 's'}"><div class="traffic-bar"><span class="bar-segment allowed-bar" style="height:${scale(bucket.allowed)}px"></span><span class="bar-segment review-bar" style="height:${scale(bucket.review)}px"></span><span class="bar-segment blocked-bar" style="height:${scale(bucket.blocked)}px"></span></div><small>${escapeHtml(labels[index])}</small></div>`;
-  }).join('')}</div>`;
+    const y = padding.top + plotHeight - (bucket[key] / maximum) * plotHeight;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const labels = series.filter((_, index) => index % 4 === 0).map((bucket) => new Date(bucket.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }));
+  chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Stored gateway traffic over the last 24 hours"><line class="chart-axis" x1="${padding.left}" y1="${padding.top + plotHeight}" x2="${width - padding.right}" y2="${padding.top + plotHeight}" /><polyline class="line allowed-line" points="${pointsFor('allowed')}" /><polyline class="line anomaly-line" points="${pointsFor('review')}" /><polyline class="line blocked-line" points="${pointsFor('blocked')}" /><text class="chart-axis-label" x="${padding.left}" y="${height - 6}">${escapeHtml(labels[0] || '')}</text><text class="chart-axis-label" text-anchor="middle" x="${width / 2}" y="${height - 6}">${escapeHtml(labels[Math.floor(labels.length / 2)] || '')}</text><text class="chart-axis-label" text-anchor="end" x="${width - padding.right}" y="${height - 6}">${escapeHtml(labels[labels.length - 1] || '')}</text></svg>`;
 }
 
 function showView(viewName) {
@@ -254,7 +241,7 @@ async function runSimulation(event) {
   button.disabled = true;
   button.innerHTML = '<span>…</span> Inspecting pipeline';
   try {
-    const response = await fetch('/inspect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ method: scenario.method, path: scenario.route, query: scenario.query, body: scenario.body, simulation: scenario.simulation }) });
+    const response = await fetch('/inspect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ method: scenario.method, path: scenario.route, query: scenario.query, body: scenario.body, simulation: scenario.simulation, request_count: scenario.requestCount }) });
     const result = await response.json();
     if (!response.ok) throw new Error(result.detail?.[0]?.msg || 'Simulation failed');
     const databaseLoaded = await loadDatabaseData();
@@ -339,18 +326,21 @@ async function loadSystemStatus() {
 
 async function loadDatabaseData() {
   try {
-    const [eventsResponse, overviewResponse, incidentsResponse] = await Promise.all([
+    const [eventsResponse, overviewResponse, incidentsResponse, trafficResponse] = await Promise.all([
       fetch('/api/events?limit=50'),
       fetch('/api/overview'),
       fetch('/api/incidents?limit=20'),
+      fetch('/api/traffic'),
     ]);
-    if (!eventsResponse.ok || !overviewResponse.ok || !incidentsResponse.ok) throw new Error('database unavailable');
+    if (!eventsResponse.ok || !overviewResponse.ok || !incidentsResponse.ok || !trafficResponse.ok) throw new Error('database unavailable');
     const eventsPayload = await eventsResponse.json();
     const overviewPayload = await overviewResponse.json();
     const incidentsPayload = await incidentsResponse.json();
+    const trafficPayload = await trafficResponse.json();
     const databaseConnected = eventsPayload.database === 'connected'
       && overviewPayload.database === 'connected'
-      && incidentsPayload.database === 'connected';
+      && incidentsPayload.database === 'connected'
+      && trafficPayload.database === 'connected';
     if (eventsPayload.database === 'connected') {
       eventLog = eventsPayload.events.map((event) => ({ ...event, occurredAt: event.time, time: formatEventTime(event.time) }));
       renderEvents();
@@ -361,6 +351,9 @@ async function loadDatabaseData() {
       document.querySelector('#blockedMetric').textContent = formatNumber(metrics.blocked_today);
       document.querySelector('#anomaliesMetric').textContent = formatNumber(metrics.anomalies_today);
       document.querySelector('#latencyMetric').innerHTML = `${metrics.p95_latency_ms} <b>ms</b>`;
+    }
+    if (trafficPayload.database === 'connected') {
+      renderTrafficSeries(trafficPayload.traffic);
     }
     if (incidentsPayload.database === 'connected') {
       const incidents = incidentsPayload.incidents;

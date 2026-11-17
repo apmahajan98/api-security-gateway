@@ -94,6 +94,16 @@ body {
   background: linear-gradient(180deg, rgba(3, 13, 23, 0.08), transparent);
 }
 
+.chart-axis {
+  stroke: #385269;
+  stroke-width: 1;
+}
+
+.chart-axis-label {
+  fill: #6e8799;
+  font: 10px var(--mono);
+}
+
 .events-panel .panel-heading,
 .table-panel .panel-heading {
   background: linear-gradient(90deg, rgba(22, 48, 70, 0.34), transparent);

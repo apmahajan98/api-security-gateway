@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS security_events (
     occurred_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     method VARCHAR(10) NOT NULL,
     path VARCHAR(2048) NOT NULL,
+    request_count INTEGER NOT NULL DEFAULT 1,
     decision VARCHAR(16) NOT NULL CHECK (decision IN ('allow', 'block', 'review')),
     classification VARCHAR(32) NOT NULL,
     detector VARCHAR(128) NOT NULL,
