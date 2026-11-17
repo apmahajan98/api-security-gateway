@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
+from statistics import median
 from typing import Any
 
 from sqlalchemy import DateTime, Float, Index, Integer, JSON, String, Text, create_engine, func, select, text
@@ -173,6 +174,75 @@ def recent_events(limit: int = 50) -> list[dict[str, Any]]:
     with SessionLocal() as session:
         rows = session.scalars(select(SecurityEvent).order_by(SecurityEvent.occurred_at.desc()).limit(limit)).all()
         return [serialize_event(row) for row in rows]
+
+
+def api_inventory() -> list[dict[str, Any]]:
+    """Summarize observed routes from persisted gateway events."""
+    with SessionLocal() as session:
+        rows = session.scalars(select(SecurityEvent).order_by(SecurityEvent.occurred_at.desc())).all()
+
+    grouped: dict[tuple[str, str], dict[str, Any]] = {}
+    for row in rows:
+        key = (row.method, row.path)
+        item = grouped.setdefault(
+            key,
+            {"method": row.method, "path": row.path, "requests": 0, "allowed": 0, "blocked": 0, "review": 0, "latencies": []},
+        )
+        count = row.request_count
+        item["requests"] += count
+        item[{"allow": "allowed", "block": "blocked", "review": "review"}[row.decision]] += count
+        item["latencies"].extend([row.latency_ms] * min(count, 1000))
+
+    inventory = []
+    for item in grouped.values():
+        total = item["requests"]
+        status = "Review" if item["blocked"] or item["review"] else "Healthy"
+        inventory.append(
+            {
+                "name": f"{item['method']} {item['path']}",
+                "endpoint": item["path"],
+                "status": status,
+                "requests": total,
+                "allowed_percent": round(item["allowed"] / total * 100, 1) if total else 0,
+                "p95_latency_ms": round(_percentile(item["latencies"], 0.95), 2),
+            }
+        )
+    return sorted(inventory, key=lambda item: item["requests"], reverse=True)
+
+
+def _percentile(values: list[float], percentile: float) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    index = min(len(ordered) - 1, max(0, int((len(ordered) - 1) * percentile)))
+    return float(ordered[index])
+
+
+def analytics_metrics() -> dict[str, Any]:
+    """Return live detector metrics derived from persisted inspection events."""
+    with SessionLocal() as session:
+        rows = session.scalars(select(SecurityEvent)).all()
+
+    rule_rows = [row for row in rows if row.detector == "rule-detector"]
+    ml_rows = [row for row in rows if row.detector != "rule-detector"]
+    total_requests = sum(row.request_count for row in rows)
+    ml_requests = sum(row.request_count for row in ml_rows)
+    anomalies = sum(row.request_count for row in ml_rows if row.decision == "review")
+    return {
+        "stored_events": total_requests,
+        "active_routes": len({row.path for row in rows}),
+        "rule": {
+            "evaluated": sum(row.request_count for row in rule_rows),
+            "blocked": sum(row.request_count for row in rule_rows if row.decision == "block"),
+            "median_latency_ms": round(median([row.latency_ms for row in rule_rows]), 2) if rule_rows else 0,
+        },
+        "ml": {
+            "evaluated": ml_requests,
+            "anomalies": anomalies,
+            "anomaly_rate": round(anomalies / ml_requests * 100, 1) if ml_requests else 0,
+            "median_latency_ms": round(median([row.latency_ms for row in ml_rows]), 2) if ml_rows else 0,
+        },
+    }
 
 
 def active_incidents(limit: int = 20) -> list[dict[str, Any]]:

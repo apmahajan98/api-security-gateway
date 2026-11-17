@@ -205,6 +205,28 @@ function renderTrafficSeries(series) {
   chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Stored gateway traffic over the last 24 hours"><g aria-hidden="true">${yTicks}</g><line class="chart-axis" x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${padding.top + plotHeight}" /><line class="chart-axis" x1="${padding.left}" y1="${padding.top + plotHeight}" x2="${width - padding.right}" y2="${padding.top + plotHeight}" /><polyline class="line allowed-line" points="${pointsFor('allowed')}" /><polyline class="line anomaly-line" points="${pointsFor('review')}" /><polyline class="line blocked-line" points="${pointsFor('blocked')}" /><text class="chart-axis-label" x="${padding.left}" y="${height - 6}">${escapeHtml(labels[0] || '')}</text><text class="chart-axis-label" text-anchor="middle" x="${width / 2}" y="${height - 6}">${escapeHtml(labels[Math.floor(labels.length / 2)] || '')}</text><text class="chart-axis-label" text-anchor="end" x="${width - padding.right}" y="${height - 6}">${escapeHtml(labels[labels.length - 1] || '')}</text></svg>`;
 }
 
+function renderApiInventory(apis) {
+  const grid = document.querySelector('.api-grid');
+  if (!grid) return;
+  if (!apis?.length) {
+    renderEmptyState(grid, 'No API activity recorded yet.');
+    return;
+  }
+  grid.innerHTML = apis.map((api) => `<article class="panel api-card"><div class="api-title"><span class="api-status ${api.status === 'Review' ? 'warning' : ''}"></span><div><h2>${escapeHtml(api.name)}</h2><p>Observed gateway route</p></div><span class="${api.status === 'Review' ? 'warning-text' : 'healthy-text'}">${escapeHtml(api.status)}</span></div><div class="api-meta"><span><b>${formatNumber(api.requests)}</b> requests</span><span><b>${api.allowed_percent}%</b> allowed</span><span><b>${api.p95_latency_ms} ms</b> p95</span></div><div class="route-chip">${escapeHtml(api.endpoint)}</div></article>`).join('');
+}
+
+function renderAnalytics(analytics) {
+  const grid = document.querySelector('.analytics-grid');
+  if (!grid) return;
+  if (!analytics || !analytics.stored_events) {
+    renderEmptyState(grid, 'No detector activity recorded yet.');
+    return;
+  }
+  const rule = analytics.rule;
+  const ml = analytics.ml;
+  grid.innerHTML = `<article class="panel detector-card"><div class="detector-heading"><span class="detector-icon rule">⌁</span><div><h2>Rule-based detector</h2><p>Deterministic request inspection</p></div><span class="healthy-text">Active</span></div><div class="analytics-stat"><span>Median latency</span><strong>${rule.median_latency_ms} <small>ms</small></strong></div><div class="meter"><span style="width:${rule.evaluated ? 100 : 0}%"></span></div><div class="analytics-foot"><span>${formatNumber(rule.evaluated)} evaluated</span><b>${formatNumber(rule.blocked)} blocked</b></div></article><article class="panel detector-card"><div class="detector-heading"><span class="detector-icon ml">✦</span><div><h2>ML anomaly detector</h2><p>Profile-aware behavioral scoring</p></div><span class="${analytics.model_status === 'ready' ? 'healthy-text' : 'warning-text'}">${analytics.model_status === 'ready' ? 'Ready' : 'Unavailable'}</span></div><div class="analytics-stat"><span>Anomaly rate</span><strong>${ml.anomaly_rate} <small>%</small></strong></div><div class="meter ml-meter"><span style="width:${Math.min(100, ml.anomaly_rate)}%"></span></div><div class="analytics-foot"><span>${formatNumber(ml.evaluated)} evaluated</span><b>${formatNumber(ml.anomalies)} anomalies</b></div></article><article class="panel benchmark-card"><h2>Live evaluation summary</h2><p>Model ${escapeHtml(analytics.model_version || 'unavailable')} · persisted gateway activity</p><div class="benchmark-row"><span>Stored requests</span><b>${formatNumber(analytics.stored_events)}</b></div><div class="benchmark-row"><span>Active routes</span><b>${formatNumber(analytics.active_routes)}</b></div><div class="benchmark-row"><span>ML evaluations</span><b>${formatNumber(ml.evaluated)}</b></div><div class="benchmark-note">Precision and F1 require labeled evaluation data and are not inferred from live traffic.</div></article>`;
+}
+
 function showView(viewName) {
   viewPanels.forEach((panel) => panel.classList.toggle('active', panel.dataset.viewPanel === viewName));
   navItems.forEach((item) => item.classList.toggle('active', item.dataset.view === viewName));
@@ -328,21 +350,27 @@ async function loadSystemStatus() {
 
 async function loadDatabaseData() {
   try {
-    const [eventsResponse, overviewResponse, incidentsResponse, trafficResponse] = await Promise.all([
+    const [eventsResponse, overviewResponse, incidentsResponse, trafficResponse, apisResponse, analyticsResponse] = await Promise.all([
       fetch('/api/events?limit=50'),
       fetch('/api/overview'),
       fetch('/api/incidents?limit=20'),
       fetch('/api/traffic'),
+      fetch('/api/apis'),
+      fetch('/api/analytics'),
     ]);
-    if (!eventsResponse.ok || !overviewResponse.ok || !incidentsResponse.ok || !trafficResponse.ok) throw new Error('database unavailable');
+    if (!eventsResponse.ok || !overviewResponse.ok || !incidentsResponse.ok || !trafficResponse.ok || !apisResponse.ok || !analyticsResponse.ok) throw new Error('database unavailable');
     const eventsPayload = await eventsResponse.json();
     const overviewPayload = await overviewResponse.json();
     const incidentsPayload = await incidentsResponse.json();
     const trafficPayload = await trafficResponse.json();
+    const apisPayload = await apisResponse.json();
+    const analyticsPayload = await analyticsResponse.json();
     const databaseConnected = eventsPayload.database === 'connected'
       && overviewPayload.database === 'connected'
       && incidentsPayload.database === 'connected'
-      && trafficPayload.database === 'connected';
+      && trafficPayload.database === 'connected'
+      && apisPayload.database === 'connected'
+      && analyticsPayload.database === 'connected';
     if (eventsPayload.database === 'connected') {
       eventLog = eventsPayload.events.map((event) => ({ ...event, occurredAt: event.time, time: formatEventTime(event.time) }));
       renderEvents();
@@ -359,6 +387,12 @@ async function loadDatabaseData() {
     }
     if (trafficPayload.database === 'connected') {
       renderTrafficSeries(trafficPayload.traffic);
+    }
+    if (apisPayload.database === 'connected') {
+      renderApiInventory(apisPayload.apis);
+    }
+    if (analyticsPayload.database === 'connected') {
+      renderAnalytics(analyticsPayload.analytics);
     }
     if (incidentsPayload.database === 'connected') {
       const incidents = incidentsPayload.incidents;

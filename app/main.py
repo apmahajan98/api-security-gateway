@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.detectors.ml_anomaly import MLAnomalyDetector
-from app.database import active_incidents, db_available, init_db, overview_metrics, persist_inspection, recent_events, risk_for, traffic_series
+from app.database import active_incidents, analytics_metrics, api_inventory, db_available, init_db, overview_metrics, persist_inspection, recent_events, risk_for, traffic_series
 from app.ml.features import TrafficWindow
 
 app = FastAPI(
@@ -206,6 +206,24 @@ def api_events(limit: int = 50) -> dict[str, Any]:
     if not db_available():
         return {"events": [], "database": "unavailable"}
     return {"events": recent_events(max(1, min(limit, 200))), "database": "connected"}
+
+
+@app.get("/api/apis", tags=["dashboard"])
+def api_apis() -> dict[str, Any]:
+    if not db_available():
+        return {"apis": [], "database": "unavailable"}
+    return {"apis": api_inventory(), "database": "connected"}
+
+
+@app.get("/api/analytics", tags=["dashboard"])
+def api_analytics() -> dict[str, Any]:
+    if not db_available():
+        return {"analytics": {}, "database": "unavailable"}
+    detector = _load_ml_detector()
+    metrics = analytics_metrics()
+    metrics["model_version"] = detector.model_version if detector else None
+    metrics["model_status"] = "ready" if detector else "unavailable"
+    return {"analytics": metrics, "database": "connected"}
 
 
 @app.get("/api/incidents", tags=["dashboard"])
