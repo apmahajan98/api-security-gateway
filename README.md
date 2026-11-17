@@ -143,7 +143,7 @@ Clone the repository, create a virtual environment, and install the project
 with development dependencies:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/apmahajan98/api-security-gateway.git
 cd 272_project
 python3.11 -m venv .venv
 source .venv/bin/activate
