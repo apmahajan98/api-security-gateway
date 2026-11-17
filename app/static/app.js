@@ -116,6 +116,12 @@ function formatEventTime(value) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleTimeString('en-US', { hour12: false });
 }
 
+function resetSimulationResult() {
+  const simulationResult = document.querySelector('#simulationResult');
+  simulationResult.classList.add('hidden');
+  simulationResult.classList.remove('anomaly-result', 'blocked-result');
+}
+
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add('show');
@@ -310,7 +316,10 @@ document.querySelectorAll('[data-open-playground]').forEach((button) => button.a
 document.querySelector('#closePlayground').addEventListener('click', closePlayground);
 document.querySelector('#cancelPlayground').addEventListener('click', closePlayground);
 backdrop.addEventListener('click', closePlayground);
-scenarioSelect.addEventListener('change', renderScenarioDetails);
+scenarioSelect.addEventListener('change', () => {
+  renderScenarioDetails();
+  resetSimulationResult();
+});
 playgroundForm.addEventListener('submit', runSimulation);
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closePlayground(); });
 
