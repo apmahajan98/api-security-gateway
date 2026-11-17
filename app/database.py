@@ -206,8 +206,8 @@ def overview_metrics() -> dict[str, Any]:
         return {"requests_today": total, "blocked_today": blocked, "anomalies_today": anomalies, "p95_latency_ms": round(float(p95 or 0), 2)}
 
 
-def traffic_series(hours: int = 24, buckets: int = 24) -> list[dict[str, Any]]:
-    """Return continuous traffic buckets using represented request counts."""
+def traffic_series(hours: int = 24, buckets: int = 96) -> list[dict[str, Any]]:
+    """Return fine-grained traffic buckets using represented request counts."""
     now = datetime.now(timezone.utc)
     start = now - timedelta(hours=hours)
     bucket_seconds = (hours * 60 * 60) / buckets
@@ -228,8 +228,28 @@ def traffic_series(hours: int = 24, buckets: int = 24) -> list[dict[str, Any]]:
             occurred_at = row.occurred_at
             if occurred_at.tzinfo is None:
                 occurred_at = occurred_at.replace(tzinfo=timezone.utc)
-            index = min(buckets - 1, max(0, int((occurred_at - start).total_seconds() / bucket_seconds)))
             series_key = {"allow": "allowed", "review": "review", "block": "blocked"}.get(row.decision)
-            if series_key:
-                values[index][series_key] += row.request_count
+            if not series_key:
+                continue
+
+            # A simulation is one persisted aggregate row, not hundreds of
+            # individually timestamped rows. Spread its represented requests
+            # over the modeled interval so the chart does not create an
+            # artificial spike at one exact timestamp.
+            simulation = row.simulation or {}
+            requests_per_minute = float(simulation.get("requests_per_minute", 0) or 0)
+            duration_seconds = row.request_count / requests_per_minute * 60 if requests_per_minute else 0
+            duration_seconds = max(60, duration_seconds) if row.request_count > 1 else 0
+            event_start = occurred_at - timedelta(seconds=duration_seconds)
+            if duration_seconds == 0:
+                event_start = occurred_at
+
+            for index, bucket in enumerate(values):
+                bucket_start = start + timedelta(seconds=index * bucket_seconds)
+                bucket_end = bucket_start + timedelta(seconds=bucket_seconds)
+                overlap = max(0, (min(occurred_at, bucket_end) - max(event_start, bucket_start)).total_seconds())
+                if duration_seconds == 0:
+                    overlap = 1 if bucket_start <= occurred_at < bucket_end else 0
+                if overlap:
+                    bucket[series_key] += row.request_count if duration_seconds == 0 else row.request_count * overlap / duration_seconds
     return values

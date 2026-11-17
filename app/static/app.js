@@ -200,7 +200,8 @@ function renderTrafficSeries(series) {
     const value = Math.round(maximum * ratio);
     return `<line class="chart-grid-line" x1="${padding.left}" y1="${y.toFixed(1)}" x2="${width - padding.right}" y2="${y.toFixed(1)}" /><text class="chart-axis-label" text-anchor="end" x="${padding.left - 8}" y="${(y + 3).toFixed(1)}">${formatNumber(value)}</text>`;
   }).join('');
-  const labels = series.filter((_, index) => index % 4 === 0).map((bucket) => new Date(bucket.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }));
+  const labelStep = Math.max(1, Math.floor(series.length / 6));
+  const labels = series.filter((_, index) => index % labelStep === 0).map((bucket) => new Date(bucket.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }));
   chart.innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Stored gateway traffic over the last 24 hours"><g aria-hidden="true">${yTicks}</g><line class="chart-axis" x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${padding.top + plotHeight}" /><line class="chart-axis" x1="${padding.left}" y1="${padding.top + plotHeight}" x2="${width - padding.right}" y2="${padding.top + plotHeight}" /><polyline class="line allowed-line" points="${pointsFor('allowed')}" /><polyline class="line anomaly-line" points="${pointsFor('review')}" /><polyline class="line blocked-line" points="${pointsFor('blocked')}" /><text class="chart-axis-label" x="${padding.left}" y="${height - 6}">${escapeHtml(labels[0] || '')}</text><text class="chart-axis-label" text-anchor="middle" x="${width / 2}" y="${height - 6}">${escapeHtml(labels[Math.floor(labels.length / 2)] || '')}</text><text class="chart-axis-label" text-anchor="end" x="${width - padding.right}" y="${height - 6}">${escapeHtml(labels[labels.length - 1] || '')}</text></svg>`;
 }
 
