@@ -191,7 +191,7 @@ def api_inventory() -> list[dict[str, Any]]:
         count = row.request_count
         item["requests"] += count
         item[{"allow": "allowed", "block": "blocked", "review": "review"}[row.decision]] += count
-        item["latencies"].extend([row.latency_ms] * min(count, 1000))
+        item["latencies"].append((row.latency_ms, count))
 
     inventory = []
     for item in grouped.values():
@@ -204,18 +204,27 @@ def api_inventory() -> list[dict[str, Any]]:
                 "status": status,
                 "requests": total,
                 "allowed_percent": round(item["allowed"] / total * 100, 1) if total else 0,
-                "p95_latency_ms": round(_percentile(item["latencies"], 0.95), 2),
+                "p95_latency_ms": round(_weighted_percentile(item["latencies"], 0.95), 2),
             }
         )
     return sorted(inventory, key=lambda item: item["requests"], reverse=True)
 
 
-def _percentile(values: list[float], percentile: float) -> float:
+def _weighted_percentile(values: list[tuple[float, int]], percentile: float) -> float:
+    """Return a percentile while respecting represented request counts."""
     if not values:
         return 0.0
-    ordered = sorted(values)
-    index = min(len(ordered) - 1, max(0, int((len(ordered) - 1) * percentile)))
-    return float(ordered[index])
+    ordered = sorted((latency, max(0, count)) for latency, count in values)
+    total = sum(count for _, count in ordered)
+    if total <= 0:
+        return 0.0
+    target = (total - 1) * percentile
+    cumulative = 0
+    for latency, count in ordered:
+        cumulative += count
+        if cumulative > target:
+            return float(latency)
+    return float(ordered[-1][0])
 
 
 def analytics_metrics() -> dict[str, Any]:
@@ -272,8 +281,9 @@ def overview_metrics() -> dict[str, Any]:
         total = session.scalar(select(func.coalesce(func.sum(SecurityEvent.request_count), 0)).where(func.date(SecurityEvent.occurred_at) == today)) or 0
         blocked = session.scalar(select(func.coalesce(func.sum(SecurityEvent.request_count), 0)).where(SecurityEvent.decision == "block", func.date(SecurityEvent.occurred_at) == today)) or 0
         anomalies = session.scalar(select(func.coalesce(func.sum(SecurityEvent.request_count), 0)).where(SecurityEvent.decision == "review", func.date(SecurityEvent.occurred_at) == today)) or 0
-        p95 = session.scalar(select(func.percentile_cont(0.95).within_group(SecurityEvent.latency_ms)).where(func.date(SecurityEvent.occurred_at) == today))
-        return {"requests_today": total, "blocked_today": blocked, "anomalies_today": anomalies, "p95_latency_ms": round(float(p95 or 0), 2)}
+        latency_rows = session.scalars(select(SecurityEvent).where(func.date(SecurityEvent.occurred_at) == today)).all()
+        p95 = _weighted_percentile([(row.latency_ms, row.request_count) for row in latency_rows], 0.95)
+        return {"requests_today": total, "blocked_today": blocked, "anomalies_today": anomalies, "p95_latency_ms": round(p95, 2)}
 
 
 def traffic_series(hours: int = 24, buckets: int = 96) -> list[dict[str, Any]]:
