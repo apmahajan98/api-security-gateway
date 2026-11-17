@@ -229,5 +229,7 @@ def traffic_series(hours: int = 24, buckets: int = 24) -> list[dict[str, Any]]:
             if occurred_at.tzinfo is None:
                 occurred_at = occurred_at.replace(tzinfo=timezone.utc)
             index = min(buckets - 1, max(0, int((occurred_at - start).total_seconds() / bucket_seconds)))
-            values[index][row.decision] += row.request_count
+            series_key = {"allow": "allowed", "review": "review", "block": "blocked"}.get(row.decision)
+            if series_key:
+                values[index][series_key] += row.request_count
     return values
