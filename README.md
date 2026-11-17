@@ -78,8 +78,8 @@ Audit events contain request ID, timestamp, HTTP method, route template,
 decision, response status, detector result, reason code, bounded latency, and a
 non-reversible correlation identifier where required.
 
-The current prototype keeps dashboard events in browser memory. The planned
-database writer will not persist authorization headers, cookies, passwords,
+The dashboard reads persisted gateway events from PostgreSQL. The database
+writer does not persist authorization headers, cookies, passwords,
 API keys, tokens, complete request bodies, or unnecessary personal data.
 Request content is inspected only within configured size limits and is not
 copied into logs or audit records. Database credentials are supplied through
@@ -97,9 +97,10 @@ runtime configuration rather than application data.
 
 The current milestone includes the FastAPI inspection endpoint, static security
 rules, the reusable CPU-based ML anomaly detector, the synthetic request
-playground, and the dashboard health/status views. The dashboard's initial KPI
-cards, chart, incidents, API inventory, and event rows are representative
-showcase data; a simulation adds real results to the current browser session.
+playground, and the dashboard health/status views. Dashboard KPI cards, charts,
+incidents, API inventory, analytics, and event rows are populated from stored
+gateway activity; a simulation adds new results through the same inspection
+and persistence path.
 
 PostgreSQL persistence is wired into the inspection path. Protected-API
 forwarding, authentication, and Helm/AWS deployment remain future milestones.
@@ -117,8 +118,9 @@ docker compose up --build
 ```
 
 The dashboard reads persisted data through `GET /api/events`,
-`GET /api/incidents`, and `GET /api/overview`. Set `DATABASE_URL` when running
-outside Compose; the local default is the value in `.env.example`.
+`GET /api/incidents`, `GET /api/overview`, `GET /api/apis`, and
+`GET /api/analytics`. Set `DATABASE_URL` when running outside Compose; the
+local default is the value in `.env.example`.
 
 ## Evaluation
 
