@@ -1671,6 +1671,28 @@ td {
   box-shadow: 0 0 0 4px #ffedbd;
 }
 
+/* Keep blocked simulations on the same red semantic palette as blocked
+   incidents and risk badges. This must follow the light-theme defaults above. */
+.simulation-result.blocked-result {
+  background: #fff0ee;
+  border-color: #e7a9a2;
+  color: #b42318;
+}
+
+.simulation-result.blocked-result .result-heading strong,
+.simulation-result.blocked-result .simulation-metrics b {
+  color: #b42318;
+}
+
+.simulation-result.blocked-result .simulation-metrics {
+  border-top-color: #e7a9a2;
+}
+
+.simulation-result.blocked-result .result-dot {
+  background: #b42318;
+  box-shadow: 0 0 0 4px #f9d8d4;
+}
+
 .risk {
   border: 1px solid currentColor;
   font-weight: 600;
