@@ -16,6 +16,7 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+psycopg://api_security:change-me-locally@db:5432/api_security
+      APP_TIMEZONE: America/Los_Angeles
       HF_HOME: /root/.cache/huggingface
       ML_ENABLED: "true"
     depends_on:

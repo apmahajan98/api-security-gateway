@@ -1,9 +1,10 @@
 import csv
 import io
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 from statistics import median
 from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy import DateTime, Float, Index, Integer, JSON, String, Text, create_engine, func, select, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
@@ -13,6 +14,7 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql+psycopg://api_security:change-me-locally@localhost:5433/api_security",
 )
+REPORTING_TIMEZONE = os.getenv("APP_TIMEZONE", "America/Los_Angeles")
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
@@ -341,13 +343,45 @@ def active_incidents(limit: int = 20) -> list[dict[str, Any]]:
         ]
 
 
+def _reporting_day_bounds_utc() -> tuple[datetime, datetime]:
+    """Return the current reporting day as UTC half-open interval.
+
+    Events are stored with UTC timestamps, but dashboard users expect
+    "today" to follow the configured application/reporting timezone. Keeping
+    the query bounds in UTC also lets PostgreSQL use the occurred_at index.
+    """
+    try:
+        reporting_zone = ZoneInfo(REPORTING_TIMEZONE)
+    except ZoneInfoNotFoundError:
+        reporting_zone = timezone.utc
+
+    now_local = datetime.now(reporting_zone)
+    start_local = datetime.combine(now_local.date(), time.min, tzinfo=reporting_zone)
+    end_local = datetime.combine(now_local.date() + timedelta(days=1), time.min, tzinfo=reporting_zone)
+    return start_local.astimezone(timezone.utc), end_local.astimezone(timezone.utc)
+
+
 def overview_metrics() -> dict[str, Any]:
     with SessionLocal() as session:
-        today = datetime.now(timezone.utc).date()
-        total = session.scalar(select(func.coalesce(func.sum(SecurityEvent.request_count), 0)).where(func.date(SecurityEvent.occurred_at) == today)) or 0
-        blocked = session.scalar(select(func.coalesce(func.sum(SecurityEvent.request_count), 0)).where(SecurityEvent.decision == "block", func.date(SecurityEvent.occurred_at) == today)) or 0
-        anomalies = session.scalar(select(func.coalesce(func.sum(SecurityEvent.request_count), 0)).where(SecurityEvent.decision == "review", func.date(SecurityEvent.occurred_at) == today)) or 0
-        latency_rows = session.scalars(select(SecurityEvent).where(func.date(SecurityEvent.occurred_at) == today)).all()
+        day_start_utc, next_day_start_utc = _reporting_day_bounds_utc()
+        day_filter = (
+            SecurityEvent.occurred_at >= day_start_utc,
+            SecurityEvent.occurred_at < next_day_start_utc,
+        )
+        total = session.scalar(
+            select(func.coalesce(func.sum(SecurityEvent.request_count), 0)).where(*day_filter)
+        ) or 0
+        blocked = session.scalar(
+            select(func.coalesce(func.sum(SecurityEvent.request_count), 0)).where(
+                SecurityEvent.decision == "block", *day_filter
+            )
+        ) or 0
+        anomalies = session.scalar(
+            select(func.coalesce(func.sum(SecurityEvent.request_count), 0)).where(
+                SecurityEvent.decision == "review", *day_filter
+            )
+        ) or 0
+        latency_rows = session.scalars(select(SecurityEvent).where(*day_filter)).all()
         p95 = _weighted_percentile([(row.latency_ms, row.request_count) for row in latency_rows], 0.95)
         return {"requests_today": total, "blocked_today": blocked, "anomalies_today": anomalies, "p95_latency_ms": round(p95, 2)}
 
